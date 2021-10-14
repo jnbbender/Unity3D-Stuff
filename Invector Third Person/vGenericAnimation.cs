@@ -137,33 +137,28 @@ namespace Invector.vCharacterController.vActions
 
         protected bool ConditionalsPass()
         {
-            foreach (Conditional cond in conditionals)
+            bool pass = true;
+            for (int i=0; i < conditionals.Length && pass; ++i)
             {
-                if (cond.type == ParameterType.Float || cond.type == ParameterType.Int)
+                if (cond.type == ParameterType.Float)
                 {
-                    if (cond.type == ParameterType.Float)
-                    {
-                        float value = (float)cond.value;
-                        float animValue = tpInput.cc.animator.GetFloat(cond.parameterName);
-                        CompareNumeric<float>(cond, value, animValue);
-                    }
-                    else
-                    {
-                        var value = (int)cond.value;
-                        int animValue = tpInput.cc.animator.GetInteger(cond.parameterName);
-                        CompareNumeric<float>(cond, value, animValue);
-                    }
+                    float value = (float)cond.value;
+                    float animValue = tpInput.cc.animator.GetFloat(cond.parameterName);
+                    pass = CompareNumeric<float>(cond, value, animValue);
+                }
+                else if (cond.type == ParameterType.Int)
+                {
+                    int value = (int)cond.value;
+                    int animValue = tpInput.cc.animator.GetInteger(cond.parameterName);
+                    pass = CompareNumeric<int>(cond, value, animValue);
                 }
                 else
                 {
                     bool val = tpInput.cc.animator.GetBool(cond.parameterName);
-                    if (val != Convert.ToBoolean(cond.boolValue))
-                    {
-                        return false;
-                    }
+                    pass = (val == Convert.ToBoolean(cond.boolValue));
                 }
             }
-            return true;
+            return pass;
         }
 
         protected bool CompareNumeric<T>(Conditional cond, T value, T animValue)
