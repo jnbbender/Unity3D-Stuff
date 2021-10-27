@@ -14,3 +14,13 @@ Now simply add a new tag "Enemy Body Part" (or whatever you'd like), create your
 ![image](https://user-images.githubusercontent.com/58187872/139158433-3aa40af1-d289-4b53-a4ac-d82b171d3e9d.png)
 
 
+When integrating with Invector the official Emerald AI docs state
+```
+//Emerald AI Damage
+if (hitInfo.targetCollider.gameObject.GetComponent<EmeraldAI.EmeraldAISystem>())
+{                 hitInfo.targetCollider.gameObject.GetComponent<EmeraldAI.EmeraldAISystem>().Damage(hitInfo.attackObject.damage.damageValue, EmeraldAI.EmeraldAISystem.TargetType.Player, transform, 400);
+}
+```
+Simply change `hitInfo.targetCollider.gameObject.GetComponent<EmeraldAI.EmeraldAISystem>()` to `hitInfo.targetCollider.gameObject.GetComponentInParent<EmeraldAI.EmeraldAISystem>()`
+
+Sounds like a lot but it's quick and worth it.
