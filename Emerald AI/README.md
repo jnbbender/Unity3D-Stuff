@@ -18,9 +18,13 @@ When integrating with Invector the official Emerald AI docs state
 ```
 //Emerald AI Damage
 if (hitInfo.targetCollider.gameObject.GetComponent<EmeraldAI.EmeraldAISystem>())
-{                 hitInfo.targetCollider.gameObject.GetComponent<EmeraldAI.EmeraldAISystem>().Damage(hitInfo.attackObject.damage.damageValue, EmeraldAI.EmeraldAISystem.TargetType.Player, transform, 400);
+{
+    hitInfo.targetCollider.gameObject.GetComponent<EmeraldAI.EmeraldAISystem>().Damage(
+        hitInfo.attackObject.damage.damageValue, EmeraldAI.EmeraldAISystem.TargetType.Player, transform, 400);
 }
 ```
-Simply change `hitInfo.targetCollider.gameObject.GetComponent<EmeraldAI.EmeraldAISystem>()` to `hitInfo.targetCollider.gameObject.GetComponentInParent<EmeraldAI.EmeraldAISystem>()`
+Simply change 
+`hitInfo.targetCollider.gameObject.GetComponent<EmeraldAI.EmeraldAISystem>()` to 
+`hitInfo.targetCollider.gameObject.GetComponentInParent<EmeraldAI.EmeraldAISystem>()`
 
 Sounds like a lot but it's quick and worth it.
