@@ -6,3 +6,6 @@ Finally, attach the Invisibility Material to the script and you're good to go.
 The Shader & Material were developed using **Amplify Shader Editor** (https://assetstore.unity.com/packages/tools/visual-scripting/amplify-shader-editor-68570) and following the instructional videos:
 https://learn.unity.com/tutorial/adding-visual-polish-with-amplify-shader-editor#5c7f8528edbc2a002053b437
 
+
+Here is what it looks like in action:
+https://www.youtube.com/watch?v=CcadNH5xgyQ
