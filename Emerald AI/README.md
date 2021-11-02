@@ -9,13 +9,18 @@ This solves the problem that Emerald AI has of using a single BoxCollider to reg
   `EmeraldComponent.AIBoxCollider = GetComponent<BoxCollider>();` with
   `EmeraldComponent.AIBoxCollider = GetComponent<EmeraldAiColliders>();`
   
-Now simply add a new tag "Enemy Body Part" (or whatever you'd like), create your colliders on your AI skeleton & tag the Components as the new tag you just defined.
+Create your colliders on your AI skeleton & tag them colliders with "AI Body Part" (or whatever you'd like).
 
+The script will populate...
 ![image](https://user-images.githubusercontent.com/58187872/139158433-3aa40af1-d289-4b53-a4ac-d82b171d3e9d.png)
+
+and your AI hitboxes will be setup.
+![EmeraldAIHitboxes](https://user-images.githubusercontent.com/58187872/139869460-936e7e66-2477-4e4e-a4b4-5de84559b889.png)
 
 
 When integrating with Invector the official Emerald AI docs state
 ```
+
 //Emerald AI Damage
 if (hitInfo.targetCollider.gameObject.GetComponent<EmeraldAI.EmeraldAISystem>())
 {
