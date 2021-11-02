@@ -23,8 +23,6 @@ public class EmeraldAIColliders : MonoBehaviour
         set { _isTrigger = value; SetTrigger(); }
     }
 
-
-    // Start is called before the first frame update
     void Awake()
     {
         if (colliders.Length < 1)
