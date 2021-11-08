@@ -94,13 +94,15 @@ namespace Invector.vCharacterController.vActions
         protected virtual void TriggerAnimation()
         {
             // condition to trigger the animation
-            bool playConditions = !isPlaying && !tpInput.cc.customAction && !string.IsNullOrEmpty(animationClip);
-            playConditions &= (conditionals.Length > 0) ? ConditionalsPass() : playConditions;
-
-            if (actionInput.GetButtonDown() && playConditions)
+            if (actionInput.GetButtonDown())
             {
-                SetParameters();
-                PlayAnimation();
+                bool playConditions = !isPlaying && !tpInput.cc.customAction && !string.IsNullOrEmpty(animationClip);
+                playConditions &= (conditionals.Length > 0) ? ConditionalsPass() : playConditions;
+                if (playConditions)
+                {
+                    SetParameters();
+                    PlayAnimation();
+                }
             }
         }
 
