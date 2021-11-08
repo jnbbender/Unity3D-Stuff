@@ -62,7 +62,7 @@ namespace Invector.vCharacterController.vActions
         public GenericInput actionInput = new GenericInput("L", "A", "A");
         [Tooltip("Name of the animation clip")]
         public string animationClip;
-        [Tooltip("Where in the end of the animation will trigger the event OnEndAnimation")]
+        [Tooltip("Which part of the animation will trigger the event OnEndAnimation. This is a normalized value (1-100%)")]
         public float animationEnd = 0.8f;
 
         public UnityEvent OnPlayAnimation;
@@ -70,7 +70,7 @@ namespace Invector.vCharacterController.vActions
         [Tooltip("These are the conditions that must be met if the Animation is going to be played")]
         public Conditional[] conditionals;
 
-        [Tooltip("These are the Animation setParameters that will be set when the animation is played")]
+        [Tooltip("These are the Animation parameters that will be set when the animation is played")]
         public Conditional[] setParameters;
         public TrueFalseValue resetParameters = TrueFalseValue.True;
 
@@ -80,7 +80,7 @@ namespace Invector.vCharacterController.vActions
         
         #endregion
 
-        protected virtual void Start()
+        protected virtual void Awake()
         {
             tpInput = GetComponent<vThirdPersonInput>();
         }
