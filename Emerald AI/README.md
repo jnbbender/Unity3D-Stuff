@@ -34,3 +34,5 @@ Simply change
 `hitInfo.targetCollider.gameObject.GetComponentInParent<EmeraldAI.EmeraldAISystem>()`
 
 Sounds like a lot but it's quick and worth it.
+
+This implementation allows for direct usage of RASCAL Skinned Mesh Renderer (https://assetstore.unity.com/packages/tools/physics/rascal-skinned-mesh-collider-134833)
