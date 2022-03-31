@@ -1,0 +1,2 @@
+Just place UILogger on an empty game object in your scene and all Debug.Log messages will be captured
+and printed to the Game UI.

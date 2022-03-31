@@ -1,0 +1,3 @@
+This script will show all Debug.Log messages directly to the running screen.
+There is single key to toggle it on/off.
+Just add this script to a GameObject, like a GameManager, and that's it.

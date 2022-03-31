@@ -1,0 +1,13 @@
+## What does it do?
+Takes the selected GameObjects in the Hierarchy window and parents them to a new "<xxx>-Group" name object.
+
+## How to use?
+Place the script in the Assets/Editor folder.
+Select all the GameObjects you want to combine.
+Got to the Main Menu and select "MyTools"->"Group Selected"
+
+## How it works
+Sometimes project layouts can be so big have poor structures that they have not been grouped/managed well.
+This will allow you to select all your wall, light, fence, etc. objects which have been peppered throughout the hierarchy
+and parent them underneath one GameObject.  The name given to this GameObject will be the name of the first
+GameObject selected with "-Group" appended.  Of course, this can always be renamed.

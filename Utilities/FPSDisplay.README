@@ -1,0 +1,2 @@
+# To use this FPS Counter.
+Add an empty GameObject to your Scene and attach the FPSDisplay script to it. That's it! No Canvas, nothing.
