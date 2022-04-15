@@ -10,7 +10,7 @@ This solves the problem that Emerald AI has of using a single BoxCollider to reg
   `EmeraldComponent.AIBoxCollider = GetComponent<EmeraldAiColliders>();`
   
 Create your colliders on your AI skeleton & tag them with "Enemy Body Part" (or whatever you'd like).
-The script will populate...
+The script will populate when you Run. (Not you, Unity)
 
 ![image](https://user-images.githubusercontent.com/58187872/139158433-3aa40af1-d289-4b53-a4ac-d82b171d3e9d.png)
 
