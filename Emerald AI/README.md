@@ -31,7 +31,7 @@ if (hitInfo.targetCollider.gameObject.GetComponent<EmeraldAI.EmeraldAISystem>())
 ```
 Simply change 
 `hitInfo.targetCollider.gameObject.GetComponent<EmeraldAI.EmeraldAISystem>()` to 
-`hitInfo.targetCollider.gameObject.GetComponentInParent<EmeraldAI.EmeraldAISystem>()`
+`hitInfo.targetCollider.gameObject.GetComponentInParent<EmeraldAIColliders>()`
 
 Sounds like a lot but it's quick and worth it.
 
