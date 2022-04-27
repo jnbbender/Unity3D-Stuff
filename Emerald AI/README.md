@@ -19,9 +19,10 @@ and your AI hitboxes will be setup.
 ![EmeraldAIHitboxes](https://user-images.githubusercontent.com/58187872/139869460-936e7e66-2477-4e4e-a4b4-5de84559b889.png)
 
 
-When integrating with Invector the official Emerald AI docs state
-```
+When integrating with **Invector** the official Emerald AI docs state
+**vMeleeManager.cs**, and **vProjectileControl.cs**
 
+```
 //Emerald AI Damage
 if (hitInfo.targetCollider.gameObject.GetComponent<EmeraldAI.EmeraldAISystem>())
 {
@@ -29,10 +30,13 @@ if (hitInfo.targetCollider.gameObject.GetComponent<EmeraldAI.EmeraldAISystem>())
         hitInfo.attackObject.damage.damageValue, EmeraldAI.EmeraldAISystem.TargetType.Player, transform, 400);
 }
 ```
+
 Simply change 
 `hitInfo.targetCollider.gameObject.GetComponent<EmeraldAI.EmeraldAISystem>()` to 
 `hitInfo.targetCollider.gameObject.GetComponentInParent<EmeraldAIColliders>()`
 
+Your hitBoxes are now children of your EmeraldAISystem so you have to call **GetComponentInParent\<EmeraldAIColliders\>**
+Whichever controller you integrate with, remember conceptually the BoxCollider is no longer on the same level as you EmeralAISystem.  Your colliders are children so just take that into account.
 Sounds like a lot but it's quick and worth it.
 
 This implementation allows for direct usage of RASCAL Skinned Mesh Renderer (https://assetstore.unity.com/packages/tools/physics/rascal-skinned-mesh-collider-134833)
