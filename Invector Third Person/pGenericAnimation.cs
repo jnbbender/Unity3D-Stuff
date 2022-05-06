@@ -107,17 +107,19 @@ namespace PBG
 
         protected virtual void TriggerAnimation()
         {
-            // condition to trigger the animation
-            bool playConditions = !isPlaying && !tpInput.cc.customAction && !string.IsNullOrEmpty(animationClip);
-            playConditions &= (conditionals.Length > 0) ? ConditionalsPass() : playConditions;
-
-            if (actionInput.GetButtonDown() && playConditions)
+            if (actionInput.GetButtonDown())
             {
-                if (animStateIdx < 0)
-                    animStateIdx = tpInput.cc.animator.GetLayerIndex(animationLayer);
+                // condition to trigger the animation
+                bool playConditions = !isPlaying && !tpInput.cc.customAction && !string.IsNullOrEmpty(animationClip);
+                playConditions &= (conditionals.Length > 0) ? ConditionalsPass() : playConditions;
+                if (playConditions)
+                {
+                    if (animStateIdx < 0)
+                        animStateIdx = tpInput.cc.animator.GetLayerIndex(animationLayer);
 
-                SetParameters();
-                PlayAnimation();
+                    SetParameters();
+                    PlayAnimation();
+                }
             }
         }
 
