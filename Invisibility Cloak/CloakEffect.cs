@@ -34,12 +34,12 @@ public class CloakEffect : MonoBehaviour
             if (cloaked)
                 Uncloak();
             else
-                Invisible();
+                Cloak();
             cloaked = !cloaked;
         }
     }
 
-    void Invisible()
+    void Cloak()
     {
         Material[] tmpMat = render.materials;
 
