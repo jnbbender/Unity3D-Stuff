@@ -19,7 +19,7 @@ and your AI hitboxes will be setup.
 ![EmeraldAIHitboxes](https://user-images.githubusercontent.com/58187872/139869460-936e7e66-2477-4e4e-a4b4-5de84559b889.png)
 
 
-When integrating with **Invector** the official Emerald AI docs state
+When integrating with **Invector** the official Emerald AI docs state the following changes should be made to 
 **vMeleeManager.cs**, and **vProjectileControl.cs**
 
 ```
@@ -30,6 +30,8 @@ if (hitInfo.targetCollider.gameObject.GetComponent<EmeraldAI.EmeraldAISystem>())
         hitInfo.attackObject.damage.damageValue, EmeraldAI.EmeraldAISystem.TargetType.Player, transform, 400);
 }
 ```
+
+when using **EmeraldAiColliders.cs**
 
 Simply change 
 `hitInfo.targetCollider.gameObject.GetComponent<EmeraldAI.EmeraldAISystem>()` to 
