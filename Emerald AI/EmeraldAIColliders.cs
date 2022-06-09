@@ -6,7 +6,7 @@ public class EmeraldAIColliders : MonoBehaviour
 {
     [Tag]
     public string collidersOnTag;
-    public CapsuleCollider[] colliders;
+    public Collider[] colliders;
 
     private bool _enabled;
     private bool _isTrigger;
@@ -27,8 +27,8 @@ public class EmeraldAIColliders : MonoBehaviour
     {
         if (colliders.Length < 1)
         {
-            CapsuleCollider[] colds = GetComponentsInChildren<CapsuleCollider>();
-            List<CapsuleCollider> bodyParts = new List<CapsuleCollider>();
+            Collider[] colds = GetComponentsInChildren<Collider>();
+            List<Collider> bodyParts = new List<Collider>();
 
             for (int i =0; i < colds.Length; ++i)
             {
@@ -44,13 +44,13 @@ public class EmeraldAIColliders : MonoBehaviour
 
     void SetEnabled()
     {
-        foreach (CapsuleCollider collider in colliders)
+        foreach (Collider collider in colliders)
             collider.enabled = _enabled;
     }
 
     void SetTrigger()
     {
-        foreach (CapsuleCollider collider in colliders)
+        foreach (Collider collider in colliders)
             collider.isTrigger = _isTrigger;
     }
 }
