@@ -5,9 +5,10 @@ using UnityEngine.Rendering.PostProcessing;
 using UnityEngine.UI;
 using UnityEngine.Events;
 
+// Requires a Post-Processing Volume somewhere in the scene
+
 public class BorderWarning : MonoBehaviour
 {
-    public PostProcessVolume ppVolume;
     public float minSaturation;
     public float saturationDuration;
 
@@ -15,6 +16,8 @@ public class BorderWarning : MonoBehaviour
     public int timeToCount;
 
     public bool outOfBoundsOnExit;
+
+    private PostProcessVolume ppVolume;
 
     // For color saturation handling
     private ColorGrading colorGrading;
@@ -24,15 +27,18 @@ public class BorderWarning : MonoBehaviour
 
     // For timer handling
     private float timeTillDeath;
-
+    private WaitForSeconds waitTimer;
+    
     private GameObject player;
     private Canvas canvas;
+    
     void Start()
     {
         GetVolumeAndColorGrading();
 
         timeTillDeath = timeToCount;
         countDownText.text = timeTillDeath.ToString();
+        waitTimer = new WaitForSeconds(1f);
         canvas = GetComponentInChildren<Canvas>();
         canvas.enabled = false;
     }
@@ -118,13 +124,14 @@ public class BorderWarning : MonoBehaviour
         canvas.enabled = false;
 
     }
+    
     IEnumerator Alert()
     {
         while (timeTillDeath >= 0)
         {
             countDownText.text = timeTillDeath.ToString();
             timeTillDeath--;
-            yield return new WaitForSeconds(1f);
+            yield return waitTimer;
         }
         // If we get here the coroutine was not stopped
         Killed();
