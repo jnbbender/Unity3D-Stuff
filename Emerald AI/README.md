@@ -37,7 +37,7 @@ when using **EmeraldAiColliders.cs**
 
 Simply change 
 `hitInfo.targetCollider.gameObject.GetComponent<EmeraldAI.EmeraldAISystem>()` to 
-`hitInfo.targetCollider.gameObject.GetComponentInParent<EmeraldAIColliders>()`
+`hitInfo.targetCollider.gameObject.GetComponentInParent<EmeraldAI.EmeraldAISystem>()`
 
 Your hitBoxes are now children of your EmeraldAISystem so you have to call **GetComponentInParent**
 Whichever controller you integrate with, remember conceptually the BoxCollider is no longer on the same level as your EmeralAISystem.  Your colliders are children so just take that into account.
