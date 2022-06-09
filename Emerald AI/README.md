@@ -6,7 +6,7 @@ This solves the problem of Emerald AI using a single BoxCollider to register AI 
 Place this script on your top level AI and do the following in _EmeraldAISystem.cs_ (NOTE: Since this was written EAI has implemented their own location based damage but does not solve the BoxCollider issue or provide the flexibility of this system)
 
 * remove the line in **RequireComponent[typeof(BoxCollider)]**
-* replace the definition _public BoxCollider AIBoxCollider;_ with _public EmeraldAiColliders AIBoxCollider;_  // I kept the same name for traceability
+* replace the definition _public BoxCollider AIBoxCollider;_ with _public EmeraldAiColliders AIBoxCollider;_  ''// I kept the same name for traceability & reduce the number of code changes ''
 * in _EmeraldAiInitializer.cs_ replace 
   `EmeraldComponent.AIBoxCollider = GetComponent<BoxCollider>();` with
   `EmeraldComponent.AIBoxCollider = GetComponent<EmeraldAiColliders>();`
