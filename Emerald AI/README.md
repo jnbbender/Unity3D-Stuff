@@ -38,7 +38,7 @@ Simply change
 `hitInfo.targetCollider.gameObject.GetComponentInParent<EmeraldAIColliders>()`
 
 Your hitBoxes are now children of your EmeraldAISystem so you have to call **GetComponentInParent\<EmeraldAIColliders\>**
-Whichever controller you integrate with, remember conceptually the BoxCollider is no longer on the same level as you EmeralAISystem.  Your colliders are children so just take that into account.
+Whichever controller you integrate with, remember conceptually the BoxCollider is no longer on the same level as your EmeralAISystem.  Your colliders are children so just take that into account.
 Sounds like a lot but it's quick and worth it.
 
 This implementation allows for direct usage of RASCAL Skinned Mesh Renderer (https://assetstore.unity.com/packages/tools/physics/rascal-skinned-mesh-collider-134833)
