@@ -1,7 +1,7 @@
 A list of resources to improve upon Emerald AI.
 
 **EmeraldAiColliders.cs**
-This solves the problem that Emerald AI has of using a single BoxCollider to register AI hits.  Place this script on your top level AI and do the following in _EmeraldAISystem.cs_ 
+This solves the problem of Emerald AI using a single BoxCollider to register AI hits. Place this script on your top level AI and do the following in _EmeraldAISystem.cs_ (NOTE: Since this was written EAI has implemented their own location based damage but does not solve the BoxCollider issue or provide the flexibility of this system)
 
 * remove the line in **RequireComponent[typeof(BoxCollider)]**
 * replace the definition _public BoxCollider AIBoxCollider;_ with _public EmeraldAiColliders AIBoxCollider;_  // I kept the same name for traceability
