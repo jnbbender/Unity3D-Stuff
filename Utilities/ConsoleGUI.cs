@@ -1,5 +1,16 @@
+using System;
 using System.Collections.Generic;
 using UnityEngine;
+
+[Flags]
+public enum ConsoleLogType
+{
+	Log = (1 << 0),
+	Warning = (1 << 1),
+	Error = (1 << 2),
+	Assert = (1 << 3),
+	Exception = (1 << 4)
+}
 
 /// <summary>
 /// A console to display Unity's debug logs in-game.
@@ -16,12 +27,20 @@ public class ConsoleGUI : MonoBehaviour
 	/// <summary>
 	/// The hotkey to show and hide the console window.
 	/// </summary>
-	public KeyCode toggleKey = KeyCode.BackQuote;
-	public bool show = true;
+	public KeyCode toggleKey = KeyCode.Home;
+	public KeyCode clearKey = KeyCode.End;
+
+	public bool collapse = true;
+
+	public ConsoleLogType toLog;
+
+	public float width;
+	public float height;
+
+	bool show = true;
 
 	List<Log> logs = new List<Log>();
 	Vector2 scrollPosition;
-	bool collapse;
 
 	// Visual elements:
 
@@ -36,13 +55,12 @@ public class ConsoleGUI : MonoBehaviour
 
 	const int margin = 20;
 
-	Rect windowRect = new Rect(margin, margin, Screen.width - (margin * 4), Screen.height - (margin * 4));
+	Rect windowRect;
 	Rect titleBarRect = new Rect(0, 0, 10000, 20);
-	GUIContent clearLabel = new GUIContent("Clear", "Clear the contents of the console.");
-	GUIContent collapseLabel = new GUIContent("Collapse", "Hide repeated messages.");
 
 	void OnEnable ()
 	{
+		windowRect = new Rect(margin, margin, width - (margin * 4), height - (margin * 4));
 		Application.RegisterLogCallback(HandleLog);
 	}
 
@@ -56,6 +74,11 @@ public class ConsoleGUI : MonoBehaviour
 		if (Input.GetKeyDown(toggleKey)) {
 			show = !show;
 		}
+		if (Input.GetKeyDown(clearKey))
+        	{
+			logs.Clear();
+		}
+
 	}
 
 	void OnGUI ()
@@ -73,6 +96,7 @@ public class ConsoleGUI : MonoBehaviour
 	/// <param name="windowID">Window ID.</param>
 	void ConsoleWindow (int windowID)
 	{
+		scrollPosition = new Vector2(0, scrollPosition.y + 20f);
 		scrollPosition = GUILayout.BeginScrollView(scrollPosition);
 
 			// Iterate through the recorded logs.
@@ -96,15 +120,9 @@ public class ConsoleGUI : MonoBehaviour
 
 		GUI.contentColor = Color.white;
 
-		GUILayout.BeginHorizontal();
+//		GUILayout.BeginHorizontal();
 
-			if (GUILayout.Button(clearLabel)) {
-				logs.Clear();
-			}
-
-			collapse = GUILayout.Toggle(collapse, collapseLabel, GUILayout.ExpandWidth(false));
-
-		GUILayout.EndHorizontal();
+//		GUILayout.EndHorizontal();
 
 		// Allow the window to be dragged by its title bar.
 		GUI.DragWindow(titleBarRect);
@@ -118,6 +136,29 @@ public class ConsoleGUI : MonoBehaviour
 	/// <param name="type">Type of message (error, exception, warning, assert).</param>
 	void HandleLog (string message, string stackTrace, LogType type)
 	{
+		int log = 0;
+		switch (type)
+                {
+			case LogType.Log:
+				log = ((int)toLog) & (int)ConsoleLogType.Log;
+				break;
+			case LogType.Exception:
+				log = (int)toLog & (int)ConsoleLogType.Exception;
+				break;
+			case LogType.Warning:
+				log = (int)toLog & (int)ConsoleLogType.Warning;
+				break;
+			case LogType.Error:
+				log = (int)toLog & (int)ConsoleLogType.Error;
+				break;
+			case LogType.Assert:
+				log = (int)toLog & (int)ConsoleLogType.Assert;
+				break;
+		}
+
+		if (log < 1)
+			return;
+
 		logs.Add(new Log() {
 			message = message,
 			stackTrace = stackTrace,
