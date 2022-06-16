@@ -136,7 +136,7 @@ public class ResourceChecker : EditorWindow {
 
 	bool collectedInPlayingMode;
 
-	[MenuItem ("Window/Resource Checker")]
+	[MenuItem ("PBG Tools/Resource Checker")]
 	static void Init ()
 	{  
 		ResourceChecker window = (ResourceChecker) EditorWindow.GetWindow (typeof (ResourceChecker));
