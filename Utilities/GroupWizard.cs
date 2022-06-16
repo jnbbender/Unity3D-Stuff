@@ -6,7 +6,7 @@ using UnityEditor;
 
 public static class GroupWizard 
 {
-    [MenuItem("MyTools/Group Selected %g")]
+    [MenuItem("PBG Tools/Group Selected %g")]
     private static void GroupSelected() 
     {
         if (!Selection.activeTransform)
