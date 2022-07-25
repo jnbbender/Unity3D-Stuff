@@ -146,8 +146,8 @@ namespace PBG
                 {
                     if(triggerOnce)
                     {
-                        triggerOnce = false;        // reset the bool so we can call the event again
-                        OnEndAnimation.Invoke();    // call the OnEnd Event at the end of the animation
+                        triggerOnce = false;        // set to false so End functions are not called multiple times
+                        OnEndAnimation.Invoke();    // call the OnEndAnimation Event at the end of the animation
                         if (resetParameters == TrueFalseValue.True)
                             ResetParameters();
                     }
