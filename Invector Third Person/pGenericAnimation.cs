@@ -1,9 +1,11 @@
-﻿using UnityEngine;
+using UnityEngine;
 using Invector;
 using UnityEngine.Events;
 using System;
 using System.Collections.Generic;
 using Invector.vCharacterController;
+using Invector.vCharacterController.vActions;
+using NaughtyAttributes;
 
 namespace PBG
 {
@@ -32,7 +34,6 @@ namespace PBG
         LessThan = 1 << 3
     }
 
-    [Serializable]
     public struct Value
     {
         public int   intValue;
@@ -43,84 +44,90 @@ namespace PBG
     [Serializable]
     public class Condition
     {
-        [SerializeField]
-        public ParameterType type;
         public string parameterName;
 
         [SerializeField]
+        [Tooltip("How should the condition be tested OR how to set the parameter")]
         public EquivalenceTest equivalenceTest;
 
         [SerializeField]
-        public Value toValue;
+        public ParameterType type;
+
+        [ShowIf("type", ParameterType.Int)]
+        [AllowNesting]
+        public int intValue;
+        [ShowIf("type", ParameterType.Float)]
+        [AllowNesting]
+        public float floatValue;
+        [ShowIf("type", ParameterType.Bool)]
+        [AllowNesting]
+        public bool boolValue;
 
         [HideInInspector]
         public Value originalValue;
     }
 
     [vClassHeader("PBG Generic Animation", "Use this script to trigger a simple animation with conditional & parameter constraints.")]
-    public class pGenericAnimation : vMonoBehaviour
+    public class pGenericAnimation : vGenericAnimation
     {
         #region Variables
 
-        [Tooltip("Input to trigger the custom animation")]
-        public GenericInput actionInput = new GenericInput("L", "A", "A");
-        [Tooltip("Name of the animation clip")]
-        public string animationClip;
         [Tooltip("If this Generic Animation represents a sequence of animations, this is the last animation clip in the sequence")]
         public string endAnimationClip = null;
-        [Tooltip("Name of the animation layer on which the clip lives")]
+        [Tooltip("Name of the animation layer or layer number on which the clip lives")]
         public string animationLayer;
-        [Tooltip("Where in the end of the animation will trigger the event OnEndAnimation")]
-        public float animationEnd = 0.8f;
 
-        public UnityEvent OnPlayAnimation;
-        public UnityEvent OnEndAnimation;
         [Tooltip("These are the conditions that must be met if the Animation is going to be played")]
-        public Condition[] conditionals;
+        public Condition[] conditions;
 
         [Tooltip("These are the Animation Parameters that will be set when the animation is played")]
         public Condition[] setParameters;
         public TrueFalseValue resetParameters = TrueFalseValue.True;
 
-        protected bool isPlaying;
-        protected bool triggerOnce;
-        protected vThirdPersonInput tpInput;
+        // This is simply used as an API for other classes to disable the use of this animation. It is not set in this script
+        [HideInInspector]
+        public bool DisableAnimation = false;
 
-        protected int animStateIdx = -1;
+        protected int animStateIdx;
         protected AnimatorStateInfo animStateInfo;
         #endregion
 
-        protected virtual void Start()
+        protected override void Start()
         {
             tpInput = GetComponent<vThirdPersonInput>();
             if (tpInput == null)
             {
-                Debug.LoError("No vThirdPersonInput found on this object.");
+                Debug.LogError("No vThirdPersonInput found on this object.");
             }
             if (endAnimationClip == null)
             {
                 endAnimationClip = animationClip;
             }
-            animStateIdx = tpInput.cc.animator.GetLayerIndex(animationLayer);
+            // if we weren't given a number as an AnimationLayer, pull it as a string
+            if (!int.TryParse(animationLayer, out animStateIdx))
+            {
+                animStateIdx = tpInput.cc.animator.GetLayerIndex(animationLayer);
+            }
+
             if (animStateIdx < 0)
             {
                 Debug.LogWarning("Unable to find animation layer " + animationLayer + ".  Only parameters will be set");
             }
         }
 
-        protected virtual void LateUpdate()
+        protected override void LateUpdate()
         {
-            TriggerAnimation();
-            AnimationBehaviour();            
+            if (DisableAnimation) return;
+            base.LateUpdate();
         }
 
-        protected virtual void TriggerAnimation()
+        protected override void TriggerAnimation()
         {
             if (actionInput.GetButtonDown())
             {
                 // condition to trigger the animation
                 bool playConditions = !isPlaying && !tpInput.cc.customAction && !string.IsNullOrEmpty(animationClip);
-                playConditions &= (conditionals.Length > 0) ? ConditionalsPass() : playConditions;
+                playConditions &= (conditions.Length > 0) ? ConditionalsPass() : playConditions;
                 if (playConditions)
                 {
                     // Set parameters before animation is played
@@ -135,17 +142,7 @@ namespace PBG
             }
         }
 
-        public virtual void PlayAnimation()
-        {
-            // we use a bool to trigger the event just once at the end of the animation
-            triggerOnce = true;
-            // trigger the OnPlay Event
-            OnPlayAnimation.Invoke();
-            // trigger the animationClip
-            tpInput.cc.animator.CrossFadeInFixedTime(animationClip, 0.1f);
-        }
-
-        protected virtual void AnimationBehaviour()
+        protected override void AnimationBehaviour()
         {
             if (animStateIdx < 0)
                 return;
@@ -170,28 +167,28 @@ namespace PBG
 
         protected bool ConditionalsPass()
         {
-            foreach (Condition cond in conditionals)
+            foreach (Condition cond in conditions)
             {
                 switch (cond.type)
                 {
                     case ParameterType.Float:
                         {
                             float animValue = tpInput.cc.animator.GetFloat(cond.parameterName);
-                            if (!TestEquivalence<float>(cond.equivalenceTest, cond.toValue.floatValue, animValue))
+                            if (!TestEquivalence<float>(cond.equivalenceTest, cond.floatValue, animValue))
                                 return false;
                             break;
                         }
                     case ParameterType.Int:
                         {
                             int animValue = tpInput.cc.animator.GetInteger(cond.parameterName);
-                            if (!TestEquivalence<int>(cond.equivalenceTest, cond.toValue.intValue, animValue))
+                            if (!TestEquivalence<int>(cond.equivalenceTest, cond.intValue, animValue))
                                 return false;
                             break;
                         }
                     case ParameterType.Bool:
                         {
                             bool val = tpInput.cc.animator.GetBool(cond.parameterName);
-                            if (val != Convert.ToBoolean(cond.toValue.boolValue))
+                            if (val != cond.boolValue)
                                 return false;
                             break;
                         }
@@ -231,15 +228,15 @@ namespace PBG
                 {
                     case ParameterType.Float:
                         cond.originalValue.floatValue = tpInput.cc.animator.GetFloat(cond.parameterName);
-                        tpInput.cc.animator.SetFloat(cond.parameterName, cond.toValue.floatValue);
+                        tpInput.cc.animator.SetFloat(cond.parameterName, cond.floatValue);
                         break;
                     case ParameterType.Int:
                         cond.originalValue.intValue = tpInput.cc.animator.GetInteger(cond.parameterName);
-                        tpInput.cc.animator.SetInteger(cond.parameterName, cond.toValue.intValue);
+                        tpInput.cc.animator.SetInteger(cond.parameterName, cond.intValue);
                         break;
                     case ParameterType.Bool:
                         cond.originalValue.boolValue = tpInput.cc.animator.GetBool(cond.parameterName);
-                        tpInput.cc.animator.SetBool(cond.parameterName, Convert.ToBoolean(cond.toValue.boolValue));
+                        tpInput.cc.animator.SetBool(cond.parameterName, cond.boolValue);
                         break;
                 };
             }
