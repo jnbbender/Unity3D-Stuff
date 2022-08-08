@@ -86,7 +86,7 @@ namespace PBG
         protected bool triggerOnce;
         protected vThirdPersonInput tpInput;
 
-        protected int animStateIdx;
+        protected int animStateIdx = -1;
         protected AnimatorStateInfo animStateInfo;
         #endregion
 
