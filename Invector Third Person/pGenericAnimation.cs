@@ -97,6 +97,11 @@ namespace PBG
             {
                 endAnimationClip = animationClip;
             }
+            animStateIdx = tpInput.cc.animator.GetLayerIndex(animationLayer);
+            if (animStateIdx < 0)
+            {
+                Debug.LogError("Unable to find animation layer " + animationLayer);
+            }
         }
 
         protected virtual void LateUpdate()
@@ -114,9 +119,6 @@ namespace PBG
                 playConditions &= (conditionals.Length > 0) ? ConditionalsPass() : playConditions;
                 if (playConditions)
                 {
-                    if (animStateIdx < 0)
-                        animStateIdx = tpInput.cc.animator.GetLayerIndex(animationLayer);
-
                     SetParameters();
                     PlayAnimation();
                 }
