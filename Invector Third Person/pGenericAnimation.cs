@@ -227,7 +227,7 @@ namespace PBG
                         tpInput.cc.animator.SetInteger(cond.parameterName, cond.toValue.intValue);
                         break;
                     case ParameterType.Bool:
-                        cond.toValue.boolValue = tpInput.cc.animator.GetBool(cond.parameterName);
+                        cond.originalValue.boolValue = tpInput.cc.animator.GetBool(cond.parameterName);
                         tpInput.cc.animator.SetBool(cond.parameterName, Convert.ToBoolean(cond.toValue.boolValue));
                         break;
                 };
