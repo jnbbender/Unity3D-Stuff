@@ -93,6 +93,10 @@ namespace PBG
         protected virtual void Start()
         {
             tpInput = GetComponent<vThirdPersonInput>();
+            if (tpInput == null)
+            {
+                Debug.LoError("No vThirdPersonInput found on this object.");
+            }
             if (endAnimationClip == null)
             {
                 endAnimationClip = animationClip;
@@ -100,7 +104,7 @@ namespace PBG
             animStateIdx = tpInput.cc.animator.GetLayerIndex(animationLayer);
             if (animStateIdx < 0)
             {
-                Debug.LogError("Unable to find animation layer " + animationLayer);
+                Debug.LogWarning("Unable to find animation layer " + animationLayer + ".  Only parameters will be set");
             }
         }
 
@@ -119,8 +123,14 @@ namespace PBG
                 playConditions &= (conditionals.Length > 0) ? ConditionalsPass() : playConditions;
                 if (playConditions)
                 {
+                    // Set parameters before animation is played
                     SetParameters();
-                    PlayAnimation();
+                    // We won't play an animation if no layer has been defined.
+                    if (animStateIdx >= 0)
+                        PlayAnimation();
+                        
+                    if (resetParameters == TrueFalseValue.True)
+                        ResetParameters();
                 }
             }
         }
@@ -137,6 +147,9 @@ namespace PBG
 
         protected virtual void AnimationBehaviour()
         {
+            if (animStateIdx < 0)
+                return;
+                
             // know if the animation is playing or not
             animStateInfo = tpInput.cc.animator.GetCurrentAnimatorStateInfo(animStateIdx);
             isPlaying = animStateInfo.IsName(endAnimationClip);
@@ -150,8 +163,6 @@ namespace PBG
                     {
                         triggerOnce = false;        // set to false so End functions are not called multiple times
                         OnEndAnimation.Invoke();    // call the OnEndAnimation Event at the end of the animation
-                        if (resetParameters == TrueFalseValue.True)
-                            ResetParameters();
                     }
                 }
             }
