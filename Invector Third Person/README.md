@@ -6,3 +6,5 @@ REQUIRES: NaughtyAttributes. (https://assetstore.unity.com/packages/tools/utilit
 -- SurfaceHitEffects.cs is a ScriptableObject which is used to combine all the effects across a number of packages, allowing you to easily select & swap between the effect you are going for.  Instancing is performed specific to the type of effect to make sure a hit against the surface normals are correct.
 
 -- pTriggerSoundsOnState.cs is a script that extends/replaces the vTriggerSoundOnState.cs script which is attached to a State in the StateMachine.  It's purpose is to allow multiple sounds to be played (just like the original vTriggerSoundOnState) but you can add multiple 'TriggerTimes'.  Meaning you can have more than one sound played in your animation at certain keyframes.  Since afterall, an animation can be made up of multiple attacks.
+
+-- vDecalManager to extend the capability to create effects based on Material names.  If 'By Material Names' is selected, a search for the hit material will be performed.  Otherwise, it will fallback & try to match the tag.
