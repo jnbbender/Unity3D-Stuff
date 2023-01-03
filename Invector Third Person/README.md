@@ -1,5 +1,6 @@
 -- pGenericAnimation.cs is a script which is derived from Invector's vGenericAnimation.cs script.  It's purpose is to add the same control over animator parameters that you would have if you were using the Animator.  For example, if you wanted to add a Slide vGenericAnimation you wouldn't want to slide if you were standing still.  With pGenericAnimation.cs you could attach the conditions, IsGrounded & InputMagnitude.  This would make sure your Player was Grounded and Running before a slide could happen.
-There is also the facility to set parameters before any animation is played.
+There is also the facility to set parameters before any animation is played. The following video provides a walk-though on how to use this asset.
+https://www.youtube.com/watch?v=UU9fgB1NnEc
 
 REQUIRES: NaughtyAttributes. (https://assetstore.unity.com/packages/tools/utilities/naughtyattributes-129996#description)
 
