@@ -101,6 +101,7 @@ public class SurfaceHitEffects : ScriptableObject
     {
         int idx;
 
+        // First let's look through the 'customEffects' list and see if there is a match for the Tag and Hit Type
         idx = surfaces.customEffects.FindIndex(e => 
             hitInfo.targetCollider.CompareTag(e.tag) && (e.hitType == hitType || e.hitType == HitType.All));
         if (idx >= 0)
@@ -116,6 +117,7 @@ public class SurfaceHitEffects : ScriptableObject
             return;
         }
 
+        // Okay, so now let's check our bullet impacts list
         idx = surfaces.bulletImpactMaterials.FindIndex(e => e.usePhysicsMaterial ?
             hitInfo.targetCollider.material.name.ToLower().Contains(e.effect.ToString().ToLower()) && (e. hitType == hitType || e.hitType == HitType.All) : 
             hitInfo.targetCollider.CompareTag(e.tag) && (e.hitType == hitType || e.hitType == HitType.All));
@@ -127,12 +129,14 @@ public class SurfaceHitEffects : ScriptableObject
             return;
         }
 
+        // Finally, let's see if this tag is part of the Blood Effects
         idx = surfaces.BFXBloodSurfaces.FindIndex(e => hitInfo.targetCollider.CompareTag(e.tag) && (e.hitType == hitType || e.hitType == HitType.All));
         if (idx >= 0)
         {
             int rndEffect = UnityEngine.Random.Range(0, surfaces.BFXBloodSurfaces[idx].bloodEffects.Count);
 
             BFX_BloodSettings effect = surfaces.BFXBloodSurfaces[idx].bloodEffects[rndEffect];
+            // as far as GroundHeight goes, I got decent results with this.
             effect.GroundHeight = player.transform.position.y;//hitInfo.attackObject.transform.position.y;
 
             float angle = Mathf.Atan2(hitInfo.hitNormal.x, hitInfo.hitNormal.z) * Mathf.Rad2Deg + 180;
