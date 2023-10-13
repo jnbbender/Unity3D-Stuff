@@ -9,3 +9,6 @@ REQUIRES: NaughtyAttributes. (https://assetstore.unity.com/packages/tools/utilit
 -- pTriggerSoundsOnState.cs is a script that extends/replaces the vTriggerSoundOnState.cs script which is attached to a State in the StateMachine.  It's purpose is to allow multiple sounds to be played (just like the original vTriggerSoundOnState) but you can add multiple 'TriggerTimes'.  Meaning you can have more than one sound played in your animation at certain keyframes.  Since afterall, an animation can be made up of multiple attacks.
 
 -- vDecalManager to extend the capability to create effects based on Material names.  If 'By Material Names' is selected, a search for the hit material will be performed.  Otherwise, it will fallback & try to match the tag.
+
+
+NOTE: I believe SurfaceHitEffects and vDecalManager are implmented by the current Invector package.  These were written prior to Invector's implementation.
