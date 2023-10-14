@@ -9,3 +9,4 @@ This folder contains a collection of Utility scripts collected over the years to
 * `ResourceChecker.cs` is most valuable as it shows what is taking up the most resources in your scene
 * `ScriptedDoorAnimator.cs` is an effective, generic script to open and close doors.
 * `Singleton.cs` allows to to make any class a Singleton by inheriting from `Singleton<classname>`
+* `ScreenShot.cs` is a simple script to take screen shots using a dedicated camera or from the main camera
