@@ -60,10 +60,10 @@ namespace NastyDiaper
             }
 
             // setup a Texture2D of the same size 
-            Texture2D text2D = new Texture2D(width, height, TextureFormat.ARGB32, false);
+            screenShotTexture = new Texture2D(width, height, TextureFormat.RGBA32, false);
             // ReadPixels will read from the current render
-            text2D.ReadPixels(new Rect(0, 0, width, height), 0, 0);
-            text2D.Apply();
+            screenShotTexture.ReadPixels(new Rect(0, 0, width, height), 0, 0);
+            screenShotTexture.Apply();
 
             // if we decided to debug and pass in an image...
             if (toImage)
@@ -73,7 +73,7 @@ namespace NastyDiaper
                 rectTransform.sizeDelta = new Vector2(width, height);
 
                 // create the new sprite and we're all good.
-                var sprite = Sprite.Create(text2D, new Rect(0, 0, width, height), new Vector2(0, 0));
+                var sprite = Sprite.Create(screenShotTexture, new Rect(0, 0, width, height), new Vector2(0, 0));
                 toImage.sprite = sprite;
                 if (debugShot && toImage)
                     toImage.enabled = true;
