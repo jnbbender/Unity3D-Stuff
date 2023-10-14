@@ -66,7 +66,7 @@ namespace NastyDiaper
             screenShotTexture.Apply();
 
             // if we decided to debug and pass in an image...
-            if (toImage)
+            if (debugShot && toImage)
             {
                 // resize the RectTransform to match our width & height
                 RectTransform rectTransform = toImage.GetComponentInParent<RectTransform>();
@@ -75,8 +75,7 @@ namespace NastyDiaper
                 // create the new sprite and we're all good.
                 var sprite = Sprite.Create(screenShotTexture, new Rect(0, 0, width, height), new Vector2(0, 0));
                 toImage.sprite = sprite;
-                if (debugShot && toImage)
-                    toImage.enabled = true;
+                toImage.enabled = true;
             }
         }
 
