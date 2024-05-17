@@ -12,3 +12,5 @@ REQUIRES: NaughtyAttributes. (https://assetstore.unity.com/packages/tools/utilit
 
 
 NOTE: I believe SurfaceHitEffects and vDecalManager are implmented by the current Invector package.  These were written prior to Invector's implementation.
+
+-- JumpValidation.cs is used to prevent the Player from jumping if there is not enough jump height. With accompanying animations, this will notify the Player why your character is not jumping.
