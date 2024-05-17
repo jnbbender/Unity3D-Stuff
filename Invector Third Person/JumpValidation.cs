@@ -73,5 +73,17 @@ namespace NastyDiaper
         {
             return Vector3.Distance(a, b) <= movementThreshold;
         }
+
+#if UNITY_EDITOR
+        private void OnDrawGizmosSelected()
+        {
+            var collider = GetComponent<CapsuleCollider>();
+
+            var start = new Vector3(transform.position.x, transform.position.y + collider.height, transform.position.z);
+            var end = new Vector3(transform.position.x, transform.position.y + collider.height + rayDistance, transform.position.z);
+            Gizmos.color = Color.yellow;
+            Gizmos.DrawLine(start, end);
+        }
+#endif
     }
 }
