@@ -25,6 +25,7 @@ namespace NastyDiaper
         private SceneBookmarkDatabase database;
         private int renameIndex = -1;
         private List<bool> foldouts = new List<bool>();
+        private Vector2 scrollPosition;
 
         [MenuItem("Tools/Nasty Diaper/Scene Bookmark Manager")]
         public static void ShowWindow()
@@ -55,11 +56,13 @@ namespace NastyDiaper
 
         private void OnGUI()
         {
+            scrollPosition = EditorGUILayout.BeginScrollView(scrollPosition);
+
             GUILayout.Label("Add New Bookmark", EditorStyles.boldLabel);
             bookmarkName = EditorGUILayout.TextField("Name", bookmarkName);
             targetObject = (GameObject)EditorGUILayout.ObjectField("Target Object", targetObject, typeof(GameObject), true);
 
-            GUI.backgroundColor = new Color(0.4f, 0.8f, 1f);
+            GUI.backgroundColor = new Color(0.6f, 0.8f, 1f); // Light blue
             if (GUILayout.Button("Add"))
             {
                 AddBookmark();
@@ -80,7 +83,7 @@ namespace NastyDiaper
                 EditorGUILayout.BeginHorizontal();
                 foldouts[i] = EditorGUILayout.Foldout(foldouts[i], database.bookmarks[i].name, true);
 
-                GUI.backgroundColor = new Color(0.3f, 1f, 0.5f);
+                GUI.backgroundColor = new Color(0.3f, 1f, 0.5f); // Green
                 if (GUILayout.Button("Go", GUILayout.Width(50)))
                 {
                     GoToBookmark(database.bookmarks[i]);
@@ -96,7 +99,7 @@ namespace NastyDiaper
                     {
                         bookmark.name = EditorGUILayout.TextField("Name", bookmark.name);
 
-                        GUI.backgroundColor = new Color(1f, 1f, 0.4f);
+                        GUI.backgroundColor = new Color(1f, 1f, 0.4f); // Yellow
                         if (GUILayout.Button("Save"))
                         {
                             renameIndex = -1;
@@ -110,28 +113,27 @@ namespace NastyDiaper
                         EditorGUILayout.LabelField("Name", bookmark.name);
                         EditorGUILayout.BeginHorizontal();
 
-                        GUI.backgroundColor = new Color(1f, 0.8f, 0.4f);
+                        GUI.backgroundColor = new Color(1f, 0.8f, 0.4f); // Orange
                         if (GUILayout.Button("Rename"))
                         {
                             renameIndex = i;
                         }
-                        GUI.backgroundColor = Color.white;
 
-                        GUI.backgroundColor = new Color(0.6f, 0.9f, 1.0f); // light blue
+                        GUI.backgroundColor = new Color(0.6f, 0.9f, 1.0f); // Light blue
                         if (GUILayout.Button("Reset Position"))
                         {
                             ResetBookmarkPosition(bookmark);
                             EditorUtility.SetDirty(database);
                             AssetDatabase.SaveAssets();
                         }
-                        GUI.backgroundColor = Color.white;
 
+                        GUI.backgroundColor = Color.white;
                         EditorGUILayout.EndHorizontal();
                     }
 
                     bookmark.target = (GameObject)EditorGUILayout.ObjectField("Target Object", bookmark.target, typeof(GameObject), true);
 
-                    GUI.backgroundColor = new Color(1f, 0.4f, 0.4f);
+                    GUI.backgroundColor = new Color(1f, 0.4f, 0.4f); // Light red
                     if (GUILayout.Button("Remove"))
                     {
                         database.bookmarks.RemoveAt(i);
@@ -152,6 +154,8 @@ namespace NastyDiaper
             {
                 EditorUtility.SetDirty(database);
             }
+
+            EditorGUILayout.EndScrollView();
         }
 
         private void AddBookmark()
@@ -179,13 +183,31 @@ namespace NastyDiaper
             SceneView sceneView = SceneView.lastActiveSceneView;
             if (sceneView == null) return;
 
-            sceneView.LookAt(bookmark.position, bookmark.rotation);
-
             if (bookmark.target != null)
             {
                 Undo.RecordObject(bookmark.target.transform, "Move Target to Bookmark");
                 bookmark.target.transform.position = bookmark.position;
                 bookmark.target.transform.rotation = bookmark.rotation;
+
+                Renderer renderer = bookmark.target.GetComponentInChildren<Renderer>();
+                if (renderer != null)
+                {
+                    sceneView.Frame(renderer.bounds, instant: true);
+                }
+                else
+                {
+                    sceneView.pivot = bookmark.position;
+                    sceneView.rotation = bookmark.rotation;
+                    sceneView.size = 10f;
+                    sceneView.Repaint();
+                }
+            }
+            else
+            {
+                sceneView.pivot = bookmark.position;
+                sceneView.rotation = bookmark.rotation;
+                sceneView.size = 10f;
+                sceneView.Repaint();
             }
         }
 
