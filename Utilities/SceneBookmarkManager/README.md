@@ -11,4 +11,4 @@ Well there are many tools for that.  There is TaskAtlas, CameraBookmarks by borg
   There is no need to put this in an _Editor_ directory and all Bookmarks are saved in a ScriptableObject in the same directory as this script so your Scene is never polluted.
   
 
-![alt text](https://github.com/jnbbender/Uniyt3D-Stuff/edit/main/Utilities/ScenebookmarkManager/Capture.PNG "Screenshot")
+![Screenshot](./Capture.PNG "Screenshot")
