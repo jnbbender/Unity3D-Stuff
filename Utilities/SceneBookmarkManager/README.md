@@ -10,6 +10,6 @@ Sometimes that character or scene view isn't exactly where you might want it. So
 
 There is no need to put this in an _Editor_ directory and all Bookmarks are saved in a ScriptableObject in the same directory as this script so your Scene is never polluted.
   
-You will find it under Tools -> Nasty Diaper -> Scene Bookmark Manager 
+You will find it under   **Tools** &#8594; **Nasty Diaper** &#8594; **Scene Bookmark Manager**
 
 ![Screenshot](./Capture.PNG "Screenshot")
