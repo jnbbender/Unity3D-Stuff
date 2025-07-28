@@ -14,6 +14,9 @@ namespace NastyDiaper
         private List<bool> foldouts = new List<bool>();
         private Vector2 scrollPosition;
 
+        // Cache: UUID → GameObject lookup
+        private Dictionary<string, GameObject> uuidLookup = new Dictionary<string, GameObject>();
+
         [MenuItem("Tools/Nasty Diaper/Scene Bookmark Manager")]
         public static void ShowWindow()
         {
@@ -35,6 +38,35 @@ namespace NastyDiaper
             }
 
             foldouts = new List<bool>(new bool[database.bookmarks.Count]);
+
+            RefreshUUIDCache();
+
+            // Subscribe to hierarchy changed event to refresh cache
+            EditorApplication.hierarchyChanged += OnHierarchyChanged;
+        }
+
+        private void OnDisable()
+        {
+            EditorApplication.hierarchyChanged -= OnHierarchyChanged;
+        }
+
+        private void OnHierarchyChanged()
+        {
+            RefreshUUIDCache();
+            Repaint();
+        }
+
+        private void RefreshUUIDCache()
+        {
+            uuidLookup.Clear();
+            var allTargets = GameObject.FindObjectsOfType<BookmarkTarget>(true);
+            foreach (var target in allTargets)
+            {
+                if (!string.IsNullOrEmpty(target.uuid) && !uuidLookup.ContainsKey(target.uuid))
+                {
+                    uuidLookup.Add(target.uuid, target.gameObject);
+                }
+            }
         }
 
         private void OnGUI()
@@ -62,12 +94,12 @@ namespace NastyDiaper
                     foldouts.Add(false);
 
                 SceneBookmark bookmark = database.bookmarks[i];
+
+                // Use cache here instead of FindObjectsOfType each frame
                 GameObject target = bookmark.cachedTarget ?? FindTargetByUUID(bookmark.uuid);
                 if (target == null)
-                {
-                    // fallback: try path lookup
                     target = GameObject.Find(bookmark.targetPath);
-                }
+
                 bookmark.cachedTarget = target;
 
                 EditorGUILayout.BeginVertical("box");
@@ -87,12 +119,7 @@ namespace NastyDiaper
                 {
                     if (renameIndex == i)
                     {
-                        EditorGUI.BeginChangeCheck();
                         bookmark.name = EditorGUILayout.TextField("Name", bookmark.name);
-                        if (EditorGUI.EndChangeCheck())
-                        {
-                            MarkDatabaseDirty();
-                        }
 
                         GUI.backgroundColor = new Color(1f, 1f, 0.4f);
                         if (GUILayout.Button("Save"))
@@ -138,6 +165,7 @@ namespace NastyDiaper
                             {
                                 tag = newTarget.AddComponent<BookmarkTarget>();
                                 EditorUtility.SetDirty(tag);
+                                RefreshUUIDCache();
                             }
                             newUUID = tag.uuid;
                             newPath = GetHierarchyPath(newTarget);
@@ -188,6 +216,7 @@ namespace NastyDiaper
                 {
                     tag = targetObject.AddComponent<BookmarkTarget>();
                     EditorUtility.SetDirty(tag);
+                    RefreshUUIDCache();
                 }
                 uuid = tag.uuid;
                 path = GetHierarchyPath(targetObject);
@@ -275,15 +304,10 @@ namespace NastyDiaper
 
         private GameObject FindTargetByUUID(string uuid)
         {
-            if (string.IsNullOrEmpty(uuid))
-                return null;
+            if (string.IsNullOrEmpty(uuid)) return null;
 
-            var allTargets = GameObject.FindObjectsOfType<BookmarkTarget>(true);
-            foreach (var target in allTargets)
-            {
-                if (target.uuid == uuid)
-                    return target.gameObject;
-            }
+            if (uuidLookup.TryGetValue(uuid, out GameObject obj))
+                return obj;
 
             return null;
         }
