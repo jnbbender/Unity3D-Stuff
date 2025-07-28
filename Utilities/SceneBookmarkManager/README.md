@@ -6,9 +6,10 @@ Well there are many tools for that.  There is TaskAtlas, CameraBookmarks by borg
 * When you **Add** a new Bookmark you define a Label and Target Object if you want.
 * In the dropdown your can **Rename**, **Remove** and **Reset Position**
 
-  Sometimes that character or scene view isn't exactly where you might want it. So simply move the Target Object (in my case the character) and select **Reset Position**. Now that bookmark will be placed right where the Target Object is.
+Sometimes that character or scene view isn't exactly where you might want it. So simply move the Target Object (in my case the character) and select **Reset Position**. Now that bookmark will be placed right where the Target Object is.
 
-  There is no need to put this in an _Editor_ directory and all Bookmarks are saved in a ScriptableObject in the same directory as this script so your Scene is never polluted.
+There is no need to put this in an _Editor_ directory and all Bookmarks are saved in a ScriptableObject in the same directory as this script so your Scene is never polluted.
   
+You will find it under Tools -> Nasty Diaper -> Scene Bookmark Manager 
 
 ![Screenshot](./Capture.PNG "Screenshot")
