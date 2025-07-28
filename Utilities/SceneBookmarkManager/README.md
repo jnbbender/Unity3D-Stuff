@@ -30,7 +30,7 @@ _Keep Rotation_  - When you **Add** a bookmark, the rotation of the scene view c
    - This is exactly what you think, just removes the bookmark
 
 
-You can place this script anywhere but a SerializedObject will be placed in Assets/Editor/. All bookmarks are stored in this SerializedObject (SceneBookarkManager)
+You can place these scripts anywhere but a SerializedObject will be placed in Assets/Editor/. All bookmarks are stored in this SerializedObject (SceneBookarkManager)
   
 You will find it under   **Tools** &#8594; **Nasty Diaper** &#8594; **Scene Bookmark Manager**
 
