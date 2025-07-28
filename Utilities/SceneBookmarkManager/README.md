@@ -4,6 +4,13 @@ Task Atlas has some advanced features but it is not compatible with Unity 6 and 
 So here is a script I wrote (with the help of ChatGPT) that will allow you to save positions based on your current scene view *BUT*, unliike the other tools, you have can have an optional Target Object.
 For me I use my character so it will be placed at that position.  Now when you "Go" to that position, not only does your Scene View camera jump there, your Target Object is moved there also.
 
+Place the scripts under any directory:
+Asset/Scripts/Tools
+   * BookmarkTarget.cs
+   * SceneBookmark.cs
+   * SceneBookmarkDatabase.cs
+   * SceneBookmarkManager.cs
+    
 _Name_  - This will be the name of your Bookmark
 
 _Target Object_  - This is the Object you want moved. If you only want the scene view camera moved this should be empty
@@ -23,7 +30,7 @@ _Keep Rotation_  - When you **Add** a bookmark, the rotation of the scene view c
    - This is exactly what you think, just removes the bookmark
 
 
-There is no need to put this in an _Editor_ directory and all Bookmarks are saved in a ScriptableObject in the same directory as this script so your Scene is never polluted.
+You can place this script anywhere but a SerializedObject will be placed in Assets/Editor/. All bookmarks are stored in this SerializedObject (SceneBookarkManager)
   
 You will find it under   **Tools** &#8594; **Nasty Diaper** &#8594; **Scene Bookmark Manager**
 
