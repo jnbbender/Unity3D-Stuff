@@ -6,9 +6,9 @@ namespace NastyDiaper
 {
     public class SceneBookmarkManager : EditorWindow
     {
-        private string bookmarkName = "New Bookmark";
+        private string bookmarkName = "";
         private GameObject targetObject;
-        private bool keepRotation;
+        private bool keepRotation = true;
         private SceneBookmarkDatabase database;
         private int renameIndex = -1;
         private List<bool> foldouts = new List<bool>();
