@@ -1,5 +1,6 @@
 using NaughtyAttributes;
 using System;
+using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.Events;
@@ -16,6 +17,13 @@ namespace NastyDiaper
     }
 
     [Serializable]
+    public enum FONTCOLOR_TYPE
+    {
+        Black,
+        White
+    }
+
+    [Serializable]
     public class EventListener
     {
         public DIRECTION_TYPE direction;
@@ -23,24 +31,23 @@ namespace NastyDiaper
     }
 
     [RequireComponent(typeof(BoxCollider))]
-
-    public class DirectionalTriggerBox : MonoBehaviour
+    public class DirectionalCollisionTrigger : MonoBehaviour
     {
         [Tag]
         public string collisionTag;
+        public FONTCOLOR_TYPE labelColor;
+
         [Space(5)]
 
         public bool onEnterFrom;
-        [VInspector.ShowIf("onEnterFrom")]
-        public EventListener extrance;
-        [VInspector.EndIf]
+        [ShowIf(nameof(onEnterFrom))]
+        public List<EventListener> entranceEvents = new();
 
         [Space(10)]
 
         public bool onExitFrom;
-        [VInspector.ShowIf("onExitFrom")]
-        public EventListener exit;
-        [VInspector.EndIf]
+        [ShowIf(nameof(onExitFrom))]
+        public List<EventListener> exitEvents = new();
 
         private void Awake()
         {
@@ -49,31 +56,41 @@ namespace NastyDiaper
 
         private void OnTriggerEnter(Collider other)
         {
-            if (!IsValidCollider(other)) { return; }
+            if (!IsValidCollider(other)) return;
 
-            if (onEnterFrom && GetDirection(other) == extrance.direction)
+            if (onEnterFrom)
             {
-                Debug.Log("Would Enter Event Since directions match");
-                extrance.doEvent?.Invoke();
+                var direction = GetDirection(other);
+                foreach (var listener in entranceEvents)
+                {
+                    if (listener.direction == direction)
+                    {
+                        listener.doEvent?.Invoke();
+                    }
+                }
             }
         }
 
         private void OnTriggerExit(Collider other)
         {
-            if (!IsValidCollider(other)) { return; }
+            if (!IsValidCollider(other)) return;
 
-            if (onExitFrom && GetDirection(other) == exit.direction)
+            if (onExitFrom)
             {
-                Debug.Log("Would Exit Event Since directions match");
-                exit.doEvent?.Invoke();
+                var direction = GetDirection(other);
+                foreach (var listener in exitEvents)
+                {
+                    if (listener.direction == direction)
+                    {
+                        listener.doEvent?.Invoke();
+                    }
+                }
             }
         }
 
         private bool IsValidCollider(Collider other)
         {
-            // Avoid repeated LayerMask.NameToLayer calls and null/empty checks
-            return other != null
-                && other.CompareTag(collisionTag);
+            return other != null && other.CompareTag(collisionTag);
         }
 
         private DIRECTION_TYPE GetDirection(Collider other)
@@ -85,15 +102,13 @@ namespace NastyDiaper
                 return localDirection.z > 0 ? DIRECTION_TYPE.Front : DIRECTION_TYPE.Back;
         }
 
-
 #if UNITY_EDITOR
-        // Colors for each face
-        private static readonly Color FrontColor = new Color(0.3f, 1, 0.3f, 0.3f);   // Green
-        private static readonly Color BackColor = new Color(1, 0.3f, 0.3f, 0.3f);    // Red
-        private static readonly Color LeftColor = new Color(0.3f, 0.3f, 1, 0.3f);    // Blue
-        private static readonly Color RightColor = new Color(1, 1, 0.3f, 0.3f);      // Yellow
+        private static readonly Color FrontColor = new(0.3f, 1, 0.3f, 0.3f);
+        private static readonly Color BackColor = new(1, 0.3f, 0.3f, 0.3f);
+        private static readonly Color LeftColor = new(0.3f, 0.3f, 1, 0.3f);
+        private static readonly Color RightColor = new(1, 1, 0.3f, 0.3f);
 
-        private const float FaceThickness = 0.02f; // Not zero!
+        private const float FaceThickness = 0.02f;
 
         private void OnDrawGizmos()
         {
@@ -103,7 +118,6 @@ namespace NastyDiaper
             Vector3 c = box.center;
             Vector3 s = box.size;
 
-            // Draw faces and labels
             DrawColoredFaceWithLabel(
                 c + new Vector3(0, 0, s.z / 2 + FaceThickness / 2),
                 new Vector3(s.x, s.y, FaceThickness),
@@ -138,14 +152,16 @@ namespace NastyDiaper
             Gizmos.DrawCube(localCenter, faceSize);
             Gizmos.matrix = oldMatrix;
 
-            // Draw the text label at the face center (in world coordinates)
             Vector3 worldCenter = transform.TransformPoint(localCenter);
             GUIStyle style = new GUIStyle(GUI.skin.label)
             {
                 fontSize = 16,
                 fontStyle = FontStyle.Bold,
                 alignment = TextAnchor.MiddleCenter,
-                normal = new GUIStyleState() { textColor = Color.black }
+                normal = new GUIStyleState()
+                {
+                    textColor = labelColor == FONTCOLOR_TYPE.Black ? Color.black : Color.white
+                }
             };
             Handles.Label(worldCenter, label, style);
         }
