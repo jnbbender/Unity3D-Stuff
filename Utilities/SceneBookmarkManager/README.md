@@ -4,8 +4,8 @@ Task Atlas has some advanced features but it is not compatible with Unity 6 and 
 So here is a script I wrote (with the help of ChatGPT) that will allow you to save positions based on your current scene view *BUT*, unliike the other tools, you have can have an optional Target Object.
 For me I use my character so it will be placed at that position.  Now when you "Go" to that position, not only does your Scene View camera jump there, your Target Object is moved there also.
 
-Place the scripts under any directory:
-Asset/Scripts/Tools
+Place the scripts under any Editor directory:
+Asset/Scripts/Tools/Editor/
    * BookmarkTarget.cs
    * SceneBookmark.cs
    * SceneBookmarkDatabase.cs
