@@ -1,16 +1,17 @@
 Ever need to save many positions in your large scene so you can jump around easily?  
-Well there are many tools for that.  There is TaskAtlas, CameraBookmarks by borgsystem and plenty of others. But the problem is they just manipulate the scene camera which isn't very helpful when you need to move your character to those positions.  
+Well there are many tools for that.  There is TaskAtlas, CameraBookmarks by borgsystem and plenty of others. But the problem is they just manipulate the scene camera which isn't very helpful when you need to move your character to those positions.
 Task Atlas has some advanced features but it is not compatible with Unity 6 and it can't do that one simple thing.  Which for me was a HUGE problem. 
-So here is a script I wrote (with the help of ChatGPT) that will allow you to save positions based on your current scene view *BUT*, unliike the other tools, you have can have an optional Target Object.
-For me I use my character so it will be placed at that position.  Now when you "Go" to that position, not only does your Scene View camera jump there, your Target Object is moved there also.
 
-Place the scripts under any Editor directory:
-Asset/Scripts/Tools/Editor/
-   * BookmarkTarget.cs
+This tool allows you to place bookmarks around your scene, just as any other bookmark tool, *BUT* it will also move whatever Target Object you have assigned to that bookmark as well.  Which in my case was my TPS player.  So now when you "Go" to that position, not only does your Scene View camera jump there, your Target Object is moved there also.
+
+This tool also contains multi-scene support. Now you can jump between scenes or have multiple scenes open and the **SceneBookmarkManager** can handle that for you.
+
+The scripts will be placed in _Assets/NastyDiaper/SceneBookmarks/Editor_
    * SceneBookmark.cs
    * SceneBookmarkDatabase.cs
    * SceneBookmarkManager.cs
-    
+   * SceneBookmarkDatabase - Is an automatically generated database to maintain all references. Your scenes will not be polluted with extra gameobjects or scripts
+
 _Name_  - This will be the name of your Bookmark
 
 _Target Object_  - This is the Object you want moved. If you only want the scene view camera moved this should be empty
@@ -29,9 +30,6 @@ _Keep Rotation_  - When you **Add** a bookmark, the rotation of the scene view c
 * **Remove**
    - This is exactly what you think, just removes the bookmark
 
-
-You can place these scripts anywhere but a SerializedObject will be placed in Assets/Editor/. All bookmarks are stored in this SerializedObject (SceneBookarkManager)
-  
 You will find it under   **Tools** &#8594; **Nasty Diaper** &#8594; **Scene Bookmark Manager**
 
-![Screenshot](./Capture.PNG "Screenshot")
+![Screenshot](./Images/Window.PNG "Screenshot")
