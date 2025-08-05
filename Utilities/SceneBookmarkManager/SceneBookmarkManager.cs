@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
@@ -10,7 +11,7 @@ namespace NastyDiaper
     {
         private string bookmarkName = "";
         private GameObject targetObject;
-        private bool keepRotation = false;
+        private bool keepRotation = true;
         private SceneBookmarkDatabase database;
         private int renameIndex = -1;
         private List<bool> foldouts = new List<bool>();
@@ -179,14 +180,30 @@ namespace NastyDiaper
 
                     if (GUILayout.Button(new GUIContent($"{sceneName} ({bookmarkCount})", $"Click to open scene '{sceneName}' (contains {bookmarkCount} bookmark{(bookmarkCount != 1 ? "s" : "")})"), EditorStyles.miniButton))
                     {
-                        // Try to open the scene
+                        // Try to open the scene additively (without closing other scenes)
                         string[] sceneGuids = AssetDatabase.FindAssets($"t:Scene {sceneName}");
                         if (sceneGuids.Length > 0)
                         {
                             string scenePath = AssetDatabase.GUIDToAssetPath(sceneGuids[0]);
-                            if (EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo())
+
+                            // Check if scene is already open
+                            Scene existingScene = SceneManager.GetSceneByPath(scenePath);
+                            if (existingScene.IsValid() && existingScene.isLoaded)
                             {
-                                EditorSceneManager.OpenScene(scenePath);
+                                // Scene is already open, just make it active
+                                SceneManager.SetActiveScene(existingScene);
+                            }
+                            else
+                            {
+                                // Open scene additively without closing others
+                                EditorSceneManager.OpenScene(scenePath, OpenSceneMode.Additive);
+
+                                // Set the newly opened scene as active
+                                Scene newScene = SceneManager.GetSceneByPath(scenePath);
+                                if (newScene.IsValid())
+                                {
+                                    SceneManager.SetActiveScene(newScene);
+                                }
                             }
                         }
                     }
