@@ -1,6 +1,8 @@
 using System.Collections.Generic;
 using UnityEditor;
+using UnityEditor.SceneManagement;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 namespace NastyDiaper
 {
@@ -8,14 +10,18 @@ namespace NastyDiaper
     {
         private string bookmarkName = "";
         private GameObject targetObject;
-        private bool keepRotation = true;
+        private bool keepRotation = false;
         private SceneBookmarkDatabase database;
         private int renameIndex = -1;
         private List<bool> foldouts = new List<bool>();
         private Vector2 scrollPosition;
 
-        // Cache: UUID → GameObject lookup
-        private Dictionary<string, GameObject> uuidLookup = new Dictionary<string, GameObject>();
+        // New multi-scene support variables
+        private bool showAllScenes = false;
+        private string currentSceneName = "";
+        private string currentSceneGuid = "";
+        private bool showSceneSelector = false;
+        private Vector2 sceneSelectorScrollPosition;
 
         [MenuItem("Tools/Nasty Diaper/Scene Bookmark Manager")]
         public static void ShowWindow()
@@ -25,47 +31,72 @@ namespace NastyDiaper
 
         private void OnEnable()
         {
-            const string path = "Assets/Editor/SceneBookmarkDatabase.asset";
+            const string path = "Assets/NastyDiaper/SceneBookmarks/Editor/SceneBookmarkDatabase.asset";
             database = AssetDatabase.LoadAssetAtPath<SceneBookmarkDatabase>(path);
 
             if (database == null)
             {
                 database = CreateInstance<SceneBookmarkDatabase>();
-                System.IO.Directory.CreateDirectory("Assets/Editor");
+                System.IO.Directory.CreateDirectory("Assets/NastyDiaper/SceneBookmarks/Editor");
                 AssetDatabase.CreateAsset(database, path);
                 AssetDatabase.SaveAssets();
                 AssetDatabase.Refresh();
             }
 
-            foldouts = new List<bool>(new bool[database.bookmarks.Count]);
+            // Migrate old bookmarks without scene info
+            database.MigrateOldBookmarks();
 
-            RefreshUUIDCache();
+            UpdateCurrentSceneInfo();
+            RefreshFoldouts();
 
-            // Subscribe to hierarchy changed event to refresh cache
-            EditorApplication.hierarchyChanged += OnHierarchyChanged;
+            // Subscribe to scene change events
+            EditorSceneManager.sceneOpened += OnSceneOpened;
+            EditorSceneManager.activeSceneChangedInEditMode += OnActiveSceneChanged;
         }
 
         private void OnDisable()
         {
-            EditorApplication.hierarchyChanged -= OnHierarchyChanged;
+            // Unsubscribe from scene change events
+            EditorSceneManager.sceneOpened -= OnSceneOpened;
+            EditorSceneManager.activeSceneChangedInEditMode -= OnActiveSceneChanged;
         }
 
-        private void OnHierarchyChanged()
+        private void OnSceneOpened(Scene scene, OpenSceneMode mode)
         {
-            RefreshUUIDCache();
+            UpdateCurrentSceneInfo();
+            RefreshFoldouts();
             Repaint();
         }
 
-        private void RefreshUUIDCache()
+        private void OnActiveSceneChanged(Scene previousScene, Scene newScene)
         {
-            uuidLookup.Clear();
-            var allTargets = GameObject.FindObjectsOfType<BookmarkTarget>(true);
-            foreach (var target in allTargets)
+            UpdateCurrentSceneInfo();
+            RefreshFoldouts();
+            Repaint();
+        }
+
+        private void UpdateCurrentSceneInfo()
+        {
+            var activeScene = SceneManager.GetActiveScene();
+            currentSceneName = activeScene.name;
+            currentSceneGuid = AssetDatabase.AssetPathToGUID(activeScene.path);
+        }
+
+        private void RefreshFoldouts()
+        {
+            var currentBookmarks = GetCurrentBookmarks();
+            foldouts = new List<bool>(new bool[currentBookmarks.Count]);
+        }
+
+        private List<SceneBookmark> GetCurrentBookmarks()
+        {
+            if (showAllScenes)
             {
-                if (!string.IsNullOrEmpty(target.uuid) && !uuidLookup.ContainsKey(target.uuid))
-                {
-                    uuidLookup.Add(target.uuid, target.gameObject);
-                }
+                return database.bookmarks;
+            }
+            else
+            {
+                return database.GetBookmarksForScene(currentSceneName, currentSceneGuid);
             }
         }
 
@@ -73,56 +104,179 @@ namespace NastyDiaper
         {
             scrollPosition = EditorGUILayout.BeginScrollView(scrollPosition);
 
+            // Scene selector header
+            DrawSceneSelector();
+
+            EditorGUILayout.Space();
+
+            // Add new bookmark section
             GUILayout.Label("Add New Bookmark", EditorStyles.boldLabel);
-            bookmarkName = EditorGUILayout.TextField("Name", bookmarkName);
-            targetObject = (GameObject)EditorGUILayout.ObjectField("Target Object", targetObject, typeof(GameObject), true);
-            keepRotation = EditorGUILayout.Toggle("Keep Rotation", keepRotation);
+            bookmarkName = EditorGUILayout.TextField(new GUIContent("Name", "Enter a descriptive name for this bookmark"), bookmarkName);
+            targetObject = (GameObject)EditorGUILayout.ObjectField(new GUIContent("Target Object", "Optional: GameObject to move to bookmark position. Leave empty to create camera-only bookmark"), targetObject, typeof(GameObject), true);
+            keepRotation = EditorGUILayout.Toggle(new GUIContent("Keep Rotation", "When enabled with a Target Object: Uses the target's current rotation instead of the camera's rotation. When disabled: Uses the camera's viewing angle. This affects both the stored rotation and how the camera is positioned when navigating to the bookmark."), keepRotation);
 
             GUI.backgroundColor = new Color(0.6f, 0.8f, 1f);
-            if (GUILayout.Button("Add"))
+            if (GUILayout.Button(new GUIContent("Add", "Create a new bookmark at the current Scene View position")))
             {
                 AddBookmark();
             }
             GUI.backgroundColor = Color.white;
 
             EditorGUILayout.Space();
-            EditorGUILayout.LabelField("Bookmarks", EditorStyles.boldLabel);
 
-            for (int i = 0; i < database.bookmarks.Count; i++)
+            // Bookmarks section
+            DrawBookmarksList();
+
+            EditorGUILayout.EndScrollView();
+        }
+
+        private void DrawSceneSelector()
+        {
+            EditorGUILayout.BeginVertical("box");
+
+            EditorGUILayout.BeginHorizontal();
+            GUILayout.Label($"Current Scene: {currentSceneName}", EditorStyles.boldLabel);
+
+            if (GUILayout.Button(new GUIContent(showSceneSelector ? "Hide Scenes" : "Show All Scenes", showSceneSelector ? "Hide the scene selector panel" : "Show scene selector panel with all scenes that have bookmarks"), GUILayout.Width(120)))
+            {
+                showSceneSelector = !showSceneSelector;
+            }
+            EditorGUILayout.EndHorizontal();
+
+            // Show scene filter toggle
+            EditorGUILayout.BeginHorizontal();
+            bool newShowAllScenes = EditorGUILayout.Toggle(new GUIContent("Show All Scenes", "When enabled: Shows bookmarks from all scenes with scene labels. When disabled: Shows only bookmarks from the current scene"), showAllScenes);
+            if (newShowAllScenes != showAllScenes)
+            {
+                showAllScenes = newShowAllScenes;
+                RefreshFoldouts();
+            }
+
+            var currentBookmarks = GetCurrentBookmarks();
+            string countText = showAllScenes ?
+                $"Total: {database.bookmarks.Count} bookmarks" :
+                $"Current Scene: {currentBookmarks.Count} bookmarks";
+            GUILayout.Label(countText, EditorStyles.miniLabel);
+            EditorGUILayout.EndHorizontal();
+
+            // Scene selector dropdown
+            if (showSceneSelector)
+            {
+                EditorGUILayout.Space(5);
+                GUILayout.Label("Scenes with Bookmarks:", EditorStyles.miniLabel);
+
+                sceneSelectorScrollPosition = EditorGUILayout.BeginScrollView(sceneSelectorScrollPosition, GUILayout.MaxHeight(150));
+
+                var scenesWithBookmarks = database.GetScenesWithBookmarks();
+                foreach (string sceneName in scenesWithBookmarks)
+                {
+                    int bookmarkCount = database.GetBookmarkCountForScene(sceneName);
+
+                    EditorGUILayout.BeginHorizontal();
+
+                    bool isCurrentScene = sceneName == currentSceneName;
+                    GUI.backgroundColor = isCurrentScene ? new Color(0.7f, 1f, 0.7f) : Color.white;
+
+                    if (GUILayout.Button(new GUIContent($"{sceneName} ({bookmarkCount})", $"Click to open scene '{sceneName}' (contains {bookmarkCount} bookmark{(bookmarkCount != 1 ? "s" : "")})"), EditorStyles.miniButton))
+                    {
+                        // Try to open the scene
+                        string[] sceneGuids = AssetDatabase.FindAssets($"t:Scene {sceneName}");
+                        if (sceneGuids.Length > 0)
+                        {
+                            string scenePath = AssetDatabase.GUIDToAssetPath(sceneGuids[0]);
+                            if (EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo())
+                            {
+                                EditorSceneManager.OpenScene(scenePath);
+                            }
+                        }
+                    }
+
+                    GUI.backgroundColor = new Color(1f, 0.7f, 0.7f);
+                    if (GUILayout.Button(new GUIContent("Clear", $"Delete all {bookmarkCount} bookmarks from scene '{sceneName}'"), EditorStyles.miniButton, GUILayout.Width(50)))
+                    {
+                        if (EditorUtility.DisplayDialog("Clear Scene Bookmarks",
+                            $"Are you sure you want to remove all {bookmarkCount} bookmarks from scene '{sceneName}'?",
+                            "Yes", "Cancel"))
+                        {
+                            Undo.RecordObject(database, $"Clear bookmarks for {sceneName}");
+                            database.RemoveBookmarksForScene(sceneName);
+                            RefreshFoldouts();
+                            MarkDatabaseDirty();
+                        }
+                    }
+
+                    GUI.backgroundColor = Color.white;
+                    EditorGUILayout.EndHorizontal();
+                }
+
+                EditorGUILayout.EndScrollView();
+            }
+
+            EditorGUILayout.EndVertical();
+        }
+
+        private void DrawBookmarksList()
+        {
+            var currentBookmarks = GetCurrentBookmarks();
+
+            if (showAllScenes)
+            {
+                EditorGUILayout.LabelField("All Bookmarks", EditorStyles.boldLabel);
+            }
+            else
+            {
+                EditorGUILayout.LabelField($"Bookmarks for '{currentSceneName}'", EditorStyles.boldLabel);
+            }
+
+            for (int i = 0; i < currentBookmarks.Count; i++)
             {
                 if (i >= foldouts.Count)
                     foldouts.Add(false);
 
-                SceneBookmark bookmark = database.bookmarks[i];
+                SceneBookmark bookmark = currentBookmarks[i];
+                int actualIndex = database.bookmarks.IndexOf(bookmark);
 
-                // Use cache here instead of FindObjectsOfType each frame
-                GameObject target = bookmark.cachedTarget ?? FindTargetByUUID(bookmark.uuid);
-                if (target == null)
-                    target = GameObject.Find(bookmark.targetPath);
-
+                GameObject target = bookmark.FindTargetObject();
                 bookmark.cachedTarget = target;
 
                 EditorGUILayout.BeginVertical("box");
 
                 EditorGUILayout.BeginHorizontal();
-                foldouts[i] = EditorGUILayout.Foldout(foldouts[i], bookmark.name, true);
 
-                GUI.backgroundColor = new Color(0.3f, 1f, 0.5f);
-                if (GUILayout.Button("Go", GUILayout.Width(50)))
+                // Show scene name if showing all scenes
+                string displayName = bookmark.name;
+                if (showAllScenes && !string.IsNullOrEmpty(bookmark.sceneName))
+                {
+                    displayName = $"[{bookmark.sceneName}] {bookmark.name}";
+                }
+
+                foldouts[i] = EditorGUILayout.Foldout(foldouts[i], displayName, true);
+
+                // Disable "Go" button if bookmark is from different scene
+                bool canGo = bookmark.BelongsToScene(currentSceneName, currentSceneGuid);
+                GUI.enabled = canGo;
+                GUI.backgroundColor = canGo ? new Color(0.3f, 1f, 0.5f) : new Color(0.7f, 0.7f, 0.7f);
+
+                string goTooltip = canGo ?
+                    "Navigate to this bookmark position" :
+                    $"Cannot navigate - bookmark is from scene '{bookmark.sceneName}' but current scene is '{currentSceneName}'";
+
+                if (GUILayout.Button(new GUIContent("Go", goTooltip), GUILayout.Width(50)))
                 {
                     GoToBookmark(bookmark, target);
                 }
                 GUI.backgroundColor = Color.white;
+                GUI.enabled = true;
                 EditorGUILayout.EndHorizontal();
 
                 if (foldouts[i])
                 {
-                    if (renameIndex == i)
+                    if (renameIndex == actualIndex)
                     {
                         bookmark.name = EditorGUILayout.TextField("Name", bookmark.name);
 
                         GUI.backgroundColor = new Color(1f, 1f, 0.4f);
-                        if (GUILayout.Button("Save"))
+                        if (GUILayout.Button(new GUIContent("Save", "Save the new bookmark name")))
                         {
                             renameIndex = -1;
                             MarkDatabaseDirty();
@@ -132,16 +286,23 @@ namespace NastyDiaper
                     else
                     {
                         EditorGUILayout.LabelField("Name", bookmark.name);
+
+                        // Show scene info
+                        if (!string.IsNullOrEmpty(bookmark.sceneName))
+                        {
+                            EditorGUILayout.LabelField("Scene", bookmark.sceneName);
+                        }
+
                         EditorGUILayout.BeginHorizontal();
 
                         GUI.backgroundColor = new Color(1f, 0.8f, 0.4f);
-                        if (GUILayout.Button("Rename"))
+                        if (GUILayout.Button(new GUIContent("Rename", "Change the bookmark name")))
                         {
-                            renameIndex = i;
+                            renameIndex = actualIndex;
                         }
 
                         GUI.backgroundColor = new Color(0.6f, 0.9f, 1.0f);
-                        if (GUILayout.Button("Reset Position"))
+                        if (GUILayout.Button(new GUIContent("Reset Position", "Update bookmark to current Scene View position or target object position")))
                         {
                             ResetBookmarkPosition(bookmark, target);
                             MarkDatabaseDirty();
@@ -152,35 +313,18 @@ namespace NastyDiaper
                     }
 
                     EditorGUI.BeginChangeCheck();
-                    GameObject newTarget = (GameObject)EditorGUILayout.ObjectField("Target Object", target, typeof(GameObject), true);
+                    GameObject newTarget = (GameObject)EditorGUILayout.ObjectField(new GUIContent("Target Object", "GameObject that will be moved to bookmark position when navigating. Leave empty for camera-only bookmarks"), target, typeof(GameObject), true);
                     if (EditorGUI.EndChangeCheck())
                     {
-                        string newUUID = null;
-                        string newPath = null;
-
-                        if (newTarget)
-                        {
-                            BookmarkTarget tag = newTarget.GetComponent<BookmarkTarget>();
-                            if (tag == null)
-                            {
-                                tag = newTarget.AddComponent<BookmarkTarget>();
-                                EditorUtility.SetDirty(tag);
-                                RefreshUUIDCache();
-                            }
-                            newUUID = tag.uuid;
-                            newPath = GetHierarchyPath(newTarget);
-                        }
-
-                        bookmark.uuid = newUUID;
-                        bookmark.targetPath = newPath;
+                        bookmark.SetTargetObject(newTarget);
                         MarkDatabaseDirty();
                     }
 
                     GUI.backgroundColor = new Color(1f, 0.4f, 0.4f);
-                    if (GUILayout.Button("Remove"))
+                    if (GUILayout.Button(new GUIContent("Remove", "Delete this bookmark permanently")))
                     {
                         Undo.RecordObject(database, "Remove Bookmark");
-                        database.bookmarks.RemoveAt(i);
+                        database.bookmarks.RemoveAt(actualIndex);
                         foldouts.RemoveAt(i);
                         renameIndex = -1;
                         MarkDatabaseDirty();
@@ -192,8 +336,6 @@ namespace NastyDiaper
 
                 EditorGUILayout.EndVertical();
             }
-
-            EditorGUILayout.EndScrollView();
         }
 
         private void AddBookmark()
@@ -203,38 +345,46 @@ namespace NastyDiaper
             SceneView view = SceneView.lastActiveSceneView;
             if (view == null) return;
 
-            Quaternion rotation = view.camera.transform.rotation;
-            if (keepRotation && targetObject)
-                rotation = targetObject.transform.rotation;
+            // Get the Scene View camera and pivot information
+            Vector3 cameraPosition = view.camera.transform.position;
+            Quaternion cameraRotation = view.camera.transform.rotation;
+            Vector3 pivotPoint = view.pivot;
 
-            string uuid = null;
-            string path = null;
-            if (targetObject)
-            {
-                BookmarkTarget tag = targetObject.GetComponent<BookmarkTarget>();
-                if (tag == null)
-                {
-                    tag = targetObject.AddComponent<BookmarkTarget>();
-                    EditorUtility.SetDirty(tag);
-                    RefreshUUIDCache();
-                }
-                uuid = tag.uuid;
-                path = GetHierarchyPath(targetObject);
-            }
+            // Calculate the distance from pivot to camera
+            float distance = Vector3.Distance(pivotPoint, cameraPosition);
+
+            // If we have a target object and keepRotation is enabled, use target's rotation
+            if (keepRotation && targetObject)
+                cameraRotation = targetObject.transform.rotation;
 
             var bookmark = new SceneBookmark
             {
                 name = bookmarkName,
-                position = view.camera.transform.position,
-                rotation = rotation,
-                uuid = uuid,
-                targetPath = path
+                position = cameraPosition,      // Scene View camera position
+                rotation = cameraRotation,      // Scene View camera rotation
+                pivot = pivotPoint,             // Scene View pivot point
+                cameraDistance = distance       // Distance from pivot to camera
             };
+
+            // Set scene info and target object properly
+            bookmark.UpdateSceneInfo();
+            bookmark.SetTargetObject(targetObject);
 
             Undo.RecordObject(database, "Add Bookmark");
             database.bookmarks.Add(bookmark);
-            foldouts.Add(true);
+            RefreshFoldouts();
             MarkDatabaseDirty();
+
+            // Move the Target Object to the bookmark position ONLY if it exists
+            if (targetObject != null)
+            {
+                Undo.RecordObject(targetObject.transform, "Move Target to Bookmark Position");
+                targetObject.transform.position = cameraPosition;
+                targetObject.transform.rotation = cameraRotation;
+            }
+
+            // Clear the name and keep the target selected
+            bookmarkName = "";
         }
 
         private void GoToBookmark(SceneBookmark bookmark, GameObject target)
@@ -244,10 +394,12 @@ namespace NastyDiaper
 
             if (target != null)
             {
+                // Move the target object to the bookmark position
                 Undo.RecordObject(target.transform, "Move Target to Bookmark");
                 target.transform.position = bookmark.position;
                 target.transform.rotation = bookmark.rotation;
 
+                // Frame the target object in the Scene View
                 Renderer renderer = target.GetComponentInChildren<Renderer>();
                 if (renderer != null)
                 {
@@ -255,18 +407,31 @@ namespace NastyDiaper
                 }
                 else
                 {
-                    sceneView.pivot = bookmark.position;
+                    // If no renderer, restore the exact Scene View state
+                    sceneView.pivot = bookmark.pivot;
                     sceneView.rotation = bookmark.rotation;
-                    sceneView.size = 10f;
+                    sceneView.size = bookmark.cameraDistance;
                     sceneView.Repaint();
                 }
             }
             else
             {
-                sceneView.pivot = bookmark.position;
+                // No target object - restore the exact Scene View state
+                // Use the stored pivot and distance to recreate the exact camera position
+                sceneView.pivot = bookmark.pivot;
                 sceneView.rotation = bookmark.rotation;
-                sceneView.size = 10f;
+                sceneView.size = bookmark.cameraDistance;
+
+                // Force the Scene View to update immediately
                 sceneView.Repaint();
+
+                // Alternative approach: Set the camera transform directly
+                // This ensures the exact camera position is restored
+                if (sceneView.camera != null)
+                {
+                    sceneView.camera.transform.position = bookmark.position;
+                    sceneView.camera.transform.rotation = bookmark.rotation;
+                }
             }
         }
 
@@ -276,6 +441,8 @@ namespace NastyDiaper
             {
                 bookmark.position = target.transform.position;
                 bookmark.rotation = target.transform.rotation;
+                bookmark.pivot = target.transform.position;
+                bookmark.cameraDistance = 5f; // Default distance when using target
             }
             else
             {
@@ -284,32 +451,10 @@ namespace NastyDiaper
                 {
                     bookmark.position = view.camera.transform.position;
                     bookmark.rotation = view.camera.transform.rotation;
+                    bookmark.pivot = view.pivot;
+                    bookmark.cameraDistance = Vector3.Distance(view.pivot, view.camera.transform.position);
                 }
             }
-        }
-
-        private string GetHierarchyPath(GameObject obj)
-        {
-            if (obj == null) return null;
-
-            string path = obj.name;
-            Transform current = obj.transform;
-            while (current.parent != null)
-            {
-                current = current.parent;
-                path = current.name + "/" + path;
-            }
-            return path;
-        }
-
-        private GameObject FindTargetByUUID(string uuid)
-        {
-            if (string.IsNullOrEmpty(uuid)) return null;
-
-            if (uuidLookup.TryGetValue(uuid, out GameObject obj))
-                return obj;
-
-            return null;
         }
 
         private void MarkDatabaseDirty()
