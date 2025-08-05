@@ -1,5 +1,5 @@
 Ever need to save many positions in your large scene so you can jump around easily?  
-Well there are many tools for that.  There is TaskAtlas, CameraBookmarks by borgsystem and plenty of others. But the problem is they just manipulate the scene camera which isn't very helpful when you need to move your character to those positions.
+Well there are many tools for that.  There is TaskAtlas, CameraBookmarks and plenty of others. They definitely have their place as projects like Task Atlas provide so much functionality but the problem is they just manipulate the scene camera which isn't very helpful when you need to move your character to those positions.
 Task Atlas has some advanced features but it is not compatible with Unity 6 and it can't do that one simple thing.  Which for me was a HUGE problem. 
 
 This tool allows you to place bookmarks around your scene, just as any other bookmark tool, *BUT* it will also move whatever Target Object you have assigned to that bookmark as well.  Which in my case was my TPS player.  So now when you "Go" to that position, not only does your Scene View camera jump there, your Target Object is moved there also.
