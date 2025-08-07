@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using System.Linq;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
@@ -168,32 +167,101 @@ namespace NastyDiaper
 
                 sceneSelectorScrollPosition = EditorGUILayout.BeginScrollView(sceneSelectorScrollPosition, GUILayout.MaxHeight(150));
 
-                var scenesWithBookmarks = database.GetScenesWithBookmarks();
-                foreach (string sceneName in scenesWithBookmarks)
+                foreach (string sceneName in database.GetScenesWithBookmarks())
                 {
                     int bookmarkCount = database.GetBookmarkCountForScene(sceneName);
+
+                    // Check if this scene is currently loaded - improved detection
+                    bool sceneIsLoaded = false;
+                    string scenePath = "";
+
+                    // First try to find the scene by name directly
+                    Scene sceneByName = SceneManager.GetSceneByName(sceneName);
+                    if (sceneByName.IsValid() && sceneByName.isLoaded)
+                    {
+                        sceneIsLoaded = true;
+                        scenePath = sceneByName.path;
+                    }
+                    else
+                    {
+                        // Fallback: find scene by asset database and check by path
+                        string[] sceneGuids = AssetDatabase.FindAssets($"t:Scene {sceneName}");
+                        if (sceneGuids.Length > 0)
+                        {
+                            scenePath = AssetDatabase.GUIDToAssetPath(sceneGuids[0]);
+                            Scene sceneByPath = SceneManager.GetSceneByPath(scenePath);
+                            sceneIsLoaded = sceneByPath.IsValid() && sceneByPath.isLoaded;
+                        }
+                    }
 
                     EditorGUILayout.BeginHorizontal();
 
                     bool isCurrentScene = sceneName == currentSceneName;
                     GUI.backgroundColor = isCurrentScene ? new Color(0.7f, 1f, 0.7f) : Color.white;
 
-                    if (GUILayout.Button(new GUIContent($"{sceneName} ({bookmarkCount})", $"Click to open scene '{sceneName}' (contains {bookmarkCount} bookmark{(bookmarkCount != 1 ? "s" : "")})"), EditorStyles.miniButton))
-                    {
-                        // Try to open the scene additively (without closing other scenes)
-                        string[] sceneGuids = AssetDatabase.FindAssets($"t:Scene {sceneName}");
-                        if (sceneGuids.Length > 0)
-                        {
-                            string scenePath = AssetDatabase.GUIDToAssetPath(sceneGuids[0]);
+                    // Dynamic button text and tooltip based on scene state
+                    string buttonText = sceneIsLoaded ? $"Close {sceneName} ({bookmarkCount})" : $"Open {sceneName} ({bookmarkCount})";
+                    string buttonTooltip = sceneIsLoaded ?
+                        $"Unload scene '{sceneName}' (contains {bookmarkCount} bookmark{(bookmarkCount != 1 ? "s" : "")})" :
+                        $"Load scene '{sceneName}' additively (contains {bookmarkCount} bookmark{(bookmarkCount != 1 ? "s" : "")})";
 
-                            // Check if scene is already open
-                            Scene existingScene = SceneManager.GetSceneByPath(scenePath);
-                            if (existingScene.IsValid() && existingScene.isLoaded)
+                    // Debug info in tooltip during development
+                    buttonTooltip += $"\n[Debug: Scene loaded = {sceneIsLoaded}, Path = {scenePath}]";
+
+                    if (GUILayout.Button(new GUIContent(buttonText, buttonTooltip), EditorStyles.miniButton))
+                    {
+                        if (sceneIsLoaded)
+                        {
+                            // Close/Unload the scene
+                            Scene sceneToClose = !string.IsNullOrEmpty(scenePath) ?
+                                SceneManager.GetSceneByPath(scenePath) :
+                                SceneManager.GetSceneByName(sceneName);
+
+                            if (sceneToClose.IsValid() && sceneToClose.isLoaded)
                             {
-                                // Scene is already open, just make it active
-                                SceneManager.SetActiveScene(existingScene);
+                                // Don't close if it's the only scene or the active scene
+                                if (SceneManager.sceneCount > 1 && !isCurrentScene)
+                                {
+                                    // Save if modified before closing
+                                    if (sceneToClose.isDirty)
+                                    {
+                                        if (EditorUtility.DisplayDialog("Save Scene",
+                                            $"Scene '{sceneName}' has unsaved changes. Save before unloading?",
+                                            "Save", "Don't Save"))
+                                        {
+                                            EditorSceneManager.SaveScene(sceneToClose);
+                                        }
+                                    }
+                                    EditorSceneManager.CloseScene(sceneToClose, false);
+                                }
+                                else if (isCurrentScene)
+                                {
+                                    EditorUtility.DisplayDialog("Cannot Close Scene",
+                                        $"Cannot unload '{sceneName}' because it's the active scene. Switch to another scene first.",
+                                        "OK");
+                                }
+                                else
+                                {
+                                    EditorUtility.DisplayDialog("Cannot Close Scene",
+                                        $"Cannot unload '{sceneName}' because it's the only scene open. At least one scene must remain loaded.",
+                                        "OK");
+                                }
                             }
-                            else
+                        }
+                        else
+                        {
+                            // Open/Load the scene
+                            if (string.IsNullOrEmpty(scenePath))
+                            {
+                                // If we don't have the path, try to find it again
+                                string[] sceneGuids = AssetDatabase.FindAssets($"t:Scene {sceneName}");
+                                if (sceneGuids.Length > 0)
+                                {
+                                    scenePath = AssetDatabase.GUIDToAssetPath(sceneGuids[0]);
+                                }
+                            }
+
+                            if (!string.IsNullOrEmpty(scenePath))
                             {
                                 // Open scene additively without closing others
                                 EditorSceneManager.OpenScene(scenePath, OpenSceneMode.Additive);
@@ -204,6 +272,12 @@ namespace NastyDiaper
                                 {
                                     SceneManager.SetActiveScene(newScene);
                                 }
+                            }
+                            else
+                            {
+                                EditorUtility.DisplayDialog("Scene Not Found",
+                                    $"Could not find scene file for '{sceneName}'. The scene may have been moved or deleted.",
+                                    "OK");
                             }
                         }
                     }
