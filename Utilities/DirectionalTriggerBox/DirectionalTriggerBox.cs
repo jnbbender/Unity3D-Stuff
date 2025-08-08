@@ -14,6 +14,8 @@ namespace NastyDiaper
         Back,
         Left,
         Right,
+        Top,
+        Bottom
     }
 
     [Serializable]
@@ -65,6 +67,7 @@ namespace NastyDiaper
                 {
                     if (listener.direction == direction)
                     {
+                        Debug.Log(other.name + " Entered through " + direction);
                         listener.doEvent?.Invoke();
                     }
                 }
@@ -82,6 +85,7 @@ namespace NastyDiaper
                 {
                     if (listener.direction == direction)
                     {
+                        Debug.Log(other.name + " Exited through " + direction);
                         listener.doEvent?.Invoke();
                     }
                 }
@@ -96,10 +100,27 @@ namespace NastyDiaper
         private DIRECTION_TYPE GetDirection(Collider other)
         {
             Vector3 localDirection = transform.InverseTransformPoint(other.bounds.center).normalized;
-            if (Mathf.Abs(localDirection.x) > Mathf.Abs(localDirection.z))
+
+            // Find the axis with the largest absolute value
+            float absX = Mathf.Abs(localDirection.x);
+            float absY = Mathf.Abs(localDirection.y);
+            float absZ = Mathf.Abs(localDirection.z);
+
+            if (absY > absX && absY > absZ)
+            {
+                // Y axis is dominant
+                return localDirection.y > 0 ? DIRECTION_TYPE.Top : DIRECTION_TYPE.Bottom;
+            }
+            else if (absX > absZ)
+            {
+                // X axis is dominant
                 return localDirection.x > 0 ? DIRECTION_TYPE.Right : DIRECTION_TYPE.Left;
+            }
             else
+            {
+                // Z axis is dominant
                 return localDirection.z > 0 ? DIRECTION_TYPE.Front : DIRECTION_TYPE.Back;
+            }
         }
 
 #if UNITY_EDITOR
@@ -107,6 +128,8 @@ namespace NastyDiaper
         private static readonly Color BackColor = new(1, 0.3f, 0.3f, 0.3f);
         private static readonly Color LeftColor = new(0.3f, 0.3f, 1, 0.3f);
         private static readonly Color RightColor = new(1, 1, 0.3f, 0.3f);
+        private static readonly Color TopColor = new(0.3f, 1, 1f, 0.3f);
+        private static readonly Color BottomColor = new(1f, 0.3f, 1f, 0.3f);
 
         private const float FaceThickness = 0.02f;
 
@@ -141,6 +164,18 @@ namespace NastyDiaper
                 new Vector3(FaceThickness, s.y, s.z),
                 RightColor,
                 "Right"
+            );
+            DrawColoredFaceWithLabel(
+                c + new Vector3(0, s.y / 2 + FaceThickness / 2, 0),
+                new Vector3(s.x, FaceThickness, s.z),
+                TopColor,
+                "Top"
+            );
+            DrawColoredFaceWithLabel(
+                c + new Vector3(0, -s.y / 2 - FaceThickness / 2, 0),
+                new Vector3(s.x, FaceThickness, s.z),
+                BottomColor,
+                "Bottom"
             );
         }
 
