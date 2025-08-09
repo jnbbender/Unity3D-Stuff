@@ -171,7 +171,7 @@ namespace NastyDiaper
                 {
                     int bookmarkCount = database.GetBookmarkCountForScene(sceneName);
 
-                    // Check if this scene is currently loaded - improved detection
+                    // Check if this scene is currently loaded - improved detection with exact name matching
                     bool sceneIsLoaded = false;
                     string scenePath = "";
 
@@ -184,13 +184,21 @@ namespace NastyDiaper
                     }
                     else
                     {
-                        // Fallback: find scene by asset database and check by path
-                        string[] sceneGuids = AssetDatabase.FindAssets($"t:Scene {sceneName}");
-                        if (sceneGuids.Length > 0)
+                        // Fallback: find scene by asset database with EXACT name matching
+                        string[] sceneGuids = AssetDatabase.FindAssets($"t:Scene");
+                        foreach (string guid in sceneGuids)
                         {
-                            scenePath = AssetDatabase.GUIDToAssetPath(sceneGuids[0]);
-                            Scene sceneByPath = SceneManager.GetSceneByPath(scenePath);
-                            sceneIsLoaded = sceneByPath.IsValid() && sceneByPath.isLoaded;
+                            string path = AssetDatabase.GUIDToAssetPath(guid);
+                            string fileName = System.IO.Path.GetFileNameWithoutExtension(path);
+
+                            // Exact name match (case-sensitive)
+                            if (fileName == sceneName)
+                            {
+                                scenePath = path;
+                                Scene sceneByPath = SceneManager.GetSceneByPath(scenePath);
+                                sceneIsLoaded = sceneByPath.IsValid() && sceneByPath.isLoaded;
+                                break;
+                            }
                         }
                     }
 
@@ -204,9 +212,6 @@ namespace NastyDiaper
                     string buttonTooltip = sceneIsLoaded ?
                         $"Unload scene '{sceneName}' (contains {bookmarkCount} bookmark{(bookmarkCount != 1 ? "s" : "")})" :
                         $"Load scene '{sceneName}' additively (contains {bookmarkCount} bookmark{(bookmarkCount != 1 ? "s" : "")})";
-
-                    // Debug info in tooltip during development
-                    buttonTooltip += $"\n[Debug: Scene loaded = {sceneIsLoaded}, Path = {scenePath}]";
 
                     if (GUILayout.Button(new GUIContent(buttonText, buttonTooltip), EditorStyles.miniButton))
                     {
@@ -253,11 +258,19 @@ namespace NastyDiaper
                             // Open/Load the scene
                             if (string.IsNullOrEmpty(scenePath))
                             {
-                                // If we don't have the path, try to find it again
-                                string[] sceneGuids = AssetDatabase.FindAssets($"t:Scene {sceneName}");
-                                if (sceneGuids.Length > 0)
+                                // If we don't have the path, try to find it with exact name matching
+                                string[] sceneGuids = AssetDatabase.FindAssets($"t:Scene");
+                                foreach (string guid in sceneGuids)
                                 {
-                                    scenePath = AssetDatabase.GUIDToAssetPath(sceneGuids[0]);
+                                    string path = AssetDatabase.GUIDToAssetPath(guid);
+                                    string fileName = System.IO.Path.GetFileNameWithoutExtension(path);
+
+                                    // Exact name match (case-sensitive)
+                                    if (fileName == sceneName)
+                                    {
+                                        scenePath = path;
+                                        break;
+                                    }
                                 }
                             }
 
