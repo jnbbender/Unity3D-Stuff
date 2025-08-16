@@ -501,7 +501,7 @@ namespace NastyDiaper
                     // If no renderer, restore the exact Scene View state
                     sceneView.pivot = bookmark.pivot;
                     sceneView.rotation = bookmark.rotation;
-                    //sceneView.size = bookmark.cameraDistance;
+                    sceneView.size = bookmark.cameraDistance;
                     sceneView.Repaint();
                 }
             }
