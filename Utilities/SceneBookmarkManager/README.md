@@ -33,3 +33,5 @@ _Keep Rotation_  - When you **Add** a bookmark, the rotation of the scene view c
 You will find it under   **Tools** &#8594; **Nasty Diaper** &#8594; **Scene Bookmark Manager**
 
 ![Screenshot](./Images/Window.PNG "Screenshot")
+
+Special Thanks to ![Player7](https://discussions.unity.com/u/player7/summary) for fixing the Camera View.
