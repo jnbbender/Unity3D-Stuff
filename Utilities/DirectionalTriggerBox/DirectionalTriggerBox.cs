@@ -58,7 +58,11 @@ namespace NastyDiaper
 
         private void OnTriggerEnter(Collider other)
         {
-            if (!IsValidCollider(other)) return;
+            if (!IsValidCollider(other))
+            {
+                DebugX.Log(other.name + " is not a valid collider");
+                return;
+            }
 
             if (onEnterFrom)
             {
@@ -99,28 +103,42 @@ namespace NastyDiaper
 
         private DIRECTION_TYPE GetDirection(Collider other)
         {
-            Vector3 localDirection = transform.InverseTransformPoint(other.bounds.center).normalized;
-
-            // Find the axis with the largest absolute value
-            float absX = Mathf.Abs(localDirection.x);
-            float absY = Mathf.Abs(localDirection.y);
-            float absZ = Mathf.Abs(localDirection.z);
-
-            if (absY > absX && absY > absZ)
-            {
-                // Y axis is dominant
-                return localDirection.y > 0 ? DIRECTION_TYPE.Top : DIRECTION_TYPE.Bottom;
-            }
-            else if (absX > absZ)
-            {
-                // X axis is dominant
-                return localDirection.x > 0 ? DIRECTION_TYPE.Right : DIRECTION_TYPE.Left;
-            }
+            BoxCollider box = GetComponent<BoxCollider>();
+            
+            // Get the other collider's center in world space
+            Vector3 otherCenter = other.bounds.center;
+            
+            // Transform to local space for easier calculation
+            Vector3 localOtherCenter = transform.InverseTransformPoint(otherCenter);
+            Vector3 localBoxCenter = box.center;
+            Vector3 boxSize = box.size;
+            
+            // Calculate the relative position from our box center
+            Vector3 relativePos = localOtherCenter - localBoxCenter;
+            
+            // Find which face is closest by checking distance to each face
+            float distToFront = Mathf.Abs(relativePos.z - boxSize.z / 2);
+            float distToBack = Mathf.Abs(relativePos.z + boxSize.z / 2);
+            float distToRight = Mathf.Abs(relativePos.x - boxSize.x / 2);
+            float distToLeft = Mathf.Abs(relativePos.x + boxSize.x / 2);
+            float distToTop = Mathf.Abs(relativePos.y - boxSize.y / 2);
+            float distToBottom = Mathf.Abs(relativePos.y + boxSize.y / 2);
+            
+            // Find the minimum distance to determine which face
+            float minDist = Mathf.Min(distToFront, distToBack, distToRight, distToLeft, distToTop, distToBottom);
+            
+            if (minDist == distToFront)
+                return DIRECTION_TYPE.Front;
+            else if (minDist == distToBack)
+                return DIRECTION_TYPE.Back;
+            else if (minDist == distToRight)
+                return DIRECTION_TYPE.Right;
+            else if (minDist == distToLeft)
+                return DIRECTION_TYPE.Left;
+            else if (minDist == distToTop)
+                return DIRECTION_TYPE.Top;
             else
-            {
-                // Z axis is dominant
-                return localDirection.z > 0 ? DIRECTION_TYPE.Front : DIRECTION_TYPE.Back;
-            }
+                return DIRECTION_TYPE.Bottom;
         }
 
 #if UNITY_EDITOR
