@@ -2,6 +2,7 @@ This folder contains a collection of Utility scripts collected over the years to
 
 * `BorderWarning.cs` is a script which is intended to be attached to a collider which defines your environment boundaries. Marked as a trigger, when the Player enters the boundary the scene's PostProcessingLayer (requires ColorGrading) will turn Grey & a countdown 'till death will be displayed.
 * `ConsoleGUI.cs` is simply a script which will direct all the Console logs to the screen.
+* `EditorCollapseAll.cs` Hate it when your Project window has tons of open folders? Maybe showing hundreds of files?. Use this to collapse ALL folders. Just right click on anything in the Project window and "Collapse All"
 * `FPSDisplay.cs` adds an FPS monitor to the screen
 * `GroupWizard.cs` takes all the selected game objects and creates a single parent for them. Nice to organize your hierarchy
 * `HelpAttribute.cs` allows you to place "Help" text using a [Help] tag above a field in your scripts
