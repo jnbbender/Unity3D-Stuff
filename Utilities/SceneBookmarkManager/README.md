@@ -34,4 +34,4 @@ You will find it under   **Tools** &#8594; **Nasty Diaper** &#8594; **Scene Book
 
 ![Screenshot](./Images/Window.PNG "Screenshot")
 
-Special Thanks to ![Player7](https://discussions.unity.com/u/player7/summary) for fixing the Camera View.
+
